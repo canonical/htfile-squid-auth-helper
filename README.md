@@ -1,26 +1,30 @@
-<!--
-Avoid using this README file for information that is maintained or published elsewhere, e.g.:
+[![CharmHub Badge](TODO)](TODO)
+[![Promote charm](https://github.com/canonical/digest-squid-auth-helper/actions/workflows/promote_charm.yaml/badge.svg)](https://github.com/canonical/digest-squid-auth-helper/actions/workflows/promote_charm.yaml)
+[![Discourse Status](https://img.shields.io/discourse/status?server=https%3A%2F%2Fdiscourse.charmhub.io&style=flat&label=CharmHub%20Discourse)](https://discourse.charmhub.io)
 
-* metadata.yaml > published on Charmhub
-* documentation > published on (or linked to from) Charmhub
-* detailed contribution guide > documentation or CONTRIBUTING.md
+# Squid Proxy digest auth helper
 
-Use links instead.
--->
+## Description
 
-# is-charms-template
+TODO
 
-Charmhub package name: operator-template
-More information: https://charmhub.io/is-charms-template
+## Usage
 
-Describe your charm in one or two sentences.
+TODO
 
-## Other resources
+## Development
 
-<!-- If your charm is documented somewhere else other than Charmhub, provide a link separately. -->
+TODO
 
-- [Read more](https://example.com)
+## Testing
 
-- [Contributing](CONTRIBUTING.md) <!-- or link to other contribution documentation -->
+TODO
 
-- See the [Juju SDK documentation](https://juju.is/docs/sdk) for more information about developing and improving charms.
+## Generating src docs for every commit
+
+Run the following command:
+
+```bash
+echo -e "tox -e src-docs\ngit add src-docs\n" >> .git/hooks/pre-commit
+chmod +x .git/hooks/pre-commit
+```
