@@ -14,7 +14,7 @@ display-name: Squid Proxy digest auth helper
 
 # (Required)
 summary: A subordinate charm enabling support for digest authentication on Squid Reverseproxy charm
-docs: TODO
+docs: https://TODO
 issues: https://github.com/canonical/digest-squid-auth-helper/issues
 maintainers: 
   - https://launchpad.net/~canonical-is-devops
@@ -39,4 +39,4 @@ series:
 requires:
   squid-auth-helper:
     interface: squid-auth-helper
-    scope: contaier
+    scope: container

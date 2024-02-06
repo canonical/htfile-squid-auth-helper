@@ -1,0 +1,26 @@
+# Copyright 2024 Canonical Ltd.
+# See LICENSE file for licensing details.
+
+create-user:
+  description: |
+    Create a user who will be usable on proxy ACLs.
+  properties:
+    username:
+      description: |
+        User name to be created.
+      type: string
+  required:
+    - username
+remove-user:
+  description: |
+    Remove an existing user from the digest file.
+  properties:
+    username:
+      description: |
+        User name to be remove.
+      type: string
+  required:
+    - username
+list-users:
+  description: |
+    List all users usable on proxy ACLs.
