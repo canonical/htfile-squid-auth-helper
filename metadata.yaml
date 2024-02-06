@@ -13,7 +13,7 @@ name: digest-squid-auth-helper-charm
 display-name: Squid Proxy digest auth helper
 
 # (Required)
-summary: A subordinate charm enabling support for digest auth on Squid Reverseproxy charm
+summary: Digest auth on Squid Reverseproxy with subordinate charm
 docs: https://TODO
 issues: https://github.com/canonical/digest-squid-auth-helper/issues
 maintainers: 
