@@ -5,7 +5,7 @@
 
 # The charm package name, no spaces (required)
 # See https://juju.is/docs/sdk/naming#heading--naming-charms for guidance.
-name: digest-squid-auth-helper-charm
+name: digest-squid-auth-helper
  
 # The following metadata are human-readable and will be published prominently on Charmhub.
 
@@ -15,7 +15,7 @@ display-name: Squid Proxy digest auth helper
 # (Required)
 summary: |
   Digest Auth for Squid Proxy
-docs: TODO
+docs: https://TODO
 issues: https://github.com/canonical/digest-squid-auth-helper/issues
 maintainers: 
   - https://launchpad.net/~canonical-is-devops
