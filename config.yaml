@@ -6,11 +6,43 @@
 # See https://juju.is/docs/config for guidance.
 
 options:
-  # An example config option to customise the log level of the workload
-  log-level:
+  children_max:
+    type: int
+    default: 20
     description: |
-      Configures the log level of gunicorn. 
-
-      Acceptable values are: "info", "debug", "warning", "error" and "critical"
-    default: "info"
+      Maximum amount of child process created to manage digest authentication.
+  children_startup:
+    type: int
+    default: 0
+    description: |
+      Initial amount of child process to manage digest authentication created at startup.
+  children_idle:
+    type: int
+    default: 1
+    description: |
+      Amount of idle child process to manage digest authentication that must be available at any time.
+  digest_filepath:
     type: string
+    default: "/etc/squid-auth/password-file"
+    description: |
+      Path where the digest file storing usernames and passwords will be stored.
+  nonce_garbage_interval:
+    type: int
+    default: 5
+    description: |
+      Specifies the interval in minutes that nonces that have been issued to client_agent's are checked for validity.
+  nonce_max_duration:
+    type: int
+    default: 30
+    description: |
+      Specifies the maximum length of time in minutes a given nonce will be valid for.
+  nonce_max_count:
+    type: int
+    default: 50
+    description: |
+      Specifies the maximum number of times a given nonce can be used.
+  realm:
+    type: string
+    default: "digest"
+    description: |
+      Name of the HTTP authentication realm.

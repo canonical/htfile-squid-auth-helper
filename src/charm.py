@@ -8,43 +8,19 @@
 """A subordinate charm enabling support for digest authentication on Squid Reverseproxy charm."""
 
 import json
-from pathlib import Path
 
 import ops
-import passlib.apache
 from passlib import pwd
 from tabulate import tabulate
 
+from charm_state import inject as inject_charm_state
+
 AUTH_HELPER_RELATION_NAME = "squid-auth-helper"
 
-SQUID_TOOLS_PATH = Path("/usr/lib/squid")
-SQUID3_TOOLS_PATH = Path("/usr/lib/squid3")
-DIGEST_FILEPATH = Path("/etc/squid-auth/password-file")
-DIGEST_REALM = "digest"
-
 EVENT_FAIL_RELATION_MISSING_MESSAGE = "Integrate the charm to a Squid Reverseproxy charm before."
-EVENT_FAIL_HTDIGEST_FILE_MISSING = (
-    "Htdigest file is missing, something probably went wrong during install"
-)
 STATUS_BLOCKED_RELATION_MISSING_MESSAGE = (
     "Waiting for integration with Squid Reverseproxy charm..."
 )
-
-
-class SquidPathNotFoundError(Exception):
-    """Exception raised when Squid path can't be found.
-
-    Attrs:
-        msg (str): Explanation of the error.
-    """
-
-    def __init__(self, msg: str):
-        """Initialize a new instance of the SquidNotFoundError exception.
-
-        Args:
-            msg (str): Explanation of the error.
-        """
-        self.msg = msg
 
 
 class DigestSquidAuthHelperCharm(ops.CharmBase):
@@ -58,15 +34,10 @@ class DigestSquidAuthHelperCharm(ops.CharmBase):
         """
         super().__init__(*args)
 
-        self._check_squid_tools_path()
-
-        self._digest = (
-            passlib.apache.HtdigestFile(DIGEST_FILEPATH, default_realm=DIGEST_REALM)
-            if DIGEST_FILEPATH.exists()
-            else None
-        )
+        self._charm_state = None
 
         self.framework.observe(self.on.install, self._on_install)
+        self.framework.observe(self.on.config_changed, self._on_config_changed)
 
         self.framework.observe(
             self.on[AUTH_HELPER_RELATION_NAME].relation_created,
@@ -81,6 +52,7 @@ class DigestSquidAuthHelperCharm(ops.CharmBase):
         self.framework.observe(self.on.remove_user_action, self._on_remove_user)
         self.framework.observe(self.on.list_users_action, self._on_list_users)
 
+    @inject_charm_state
     def _on_squid_auth_helper_relation_created(self, event: ops.RelationCreatedEvent) -> None:
         """Handle the relation created event for squid-auth-helper relation of the charm.
 
@@ -89,66 +61,74 @@ class DigestSquidAuthHelperCharm(ops.CharmBase):
         Args:
             event: Event for the squid-auth-helper relation created.
         """
-        relation_data = [
-            {
-                "scheme": "digest",
-                "program": f"{self._squid_tools_path}/digest_file_auth -c {DIGEST_FILEPATH}",
-                "children": "20 startup=0 idle=1",
-                "realm": DIGEST_REALM,
-                "nonce_garbage_interval": "5 minutes",
-                "nonce_max_duration": "30 minutes",
-                "nonce_max_count": 50,
-            }
-        ]
-
-        event.relation.data[self.unit]["auth-params"] = json.dumps(relation_data)
+        event.relation.data[self.unit]["auth-params"] = json.dumps(
+            self._charm_state.get_as_relation_data()
+        )
         self.unit.status = ops.ActiveStatus()
 
     def _on_squid_auth_helper_relation_broken(self, _: ops.RelationBrokenEvent) -> None:
         """Handle the relation broken event for squid-auth-helper relation of the charm."""
         self.unit.status = self._block_if_not_related_to_squid()
 
+    @inject_charm_state
     def _on_install(self, _: ops.StartEvent) -> None:
         """Handle the start of the charm."""
-        DIGEST_FILEPATH.parent.mkdir(parents=True, exist_ok=True)
-        DIGEST_FILEPATH.parent.chmod(0o755)
-        DIGEST_FILEPATH.touch(0o644, exist_ok=True)
+        digest_filepath = self._charm_state.digest_auth_config.digest_filepath
+        digest_filepath.parent.mkdir(parents=True, exist_ok=True)
+        digest_filepath.parent.chmod(0o755)
+        digest_filepath.touch(0o644, exist_ok=True)
 
         self.unit.status = self._block_if_not_related_to_squid()
 
+    @inject_charm_state
+    def _on_config_changed(self, _: ops.ConfigChangedEvent) -> None:
+        """Handle configuration changes made by user."""
+        relations = self.model.relations[AUTH_HELPER_RELATION_NAME]
+
+        if not relations:
+            self.unit.status = ops.BlockedStatus(STATUS_BLOCKED_RELATION_MISSING_MESSAGE)
+            return
+
+        for relation in relations:
+            relation.data[self.unit]["auth-params"] = json.dumps(
+                self._charm_state.get_as_relation_data()
+            )
+        self.unit.status = ops.ActiveStatus()
+
+    @inject_charm_state
     def _on_create_user(self, event: ops.ActionEvent) -> None:
         """Handle the create user action.
 
         This action allows to create a user that can be used in Squid proxy ACLs.
 
         Args:
-            event: Event for the create user action
-
-        Raises:
-            SquidPathNotFoundError: If the digest file is missing
-            (should be created at install)
+            event: Event for the create user action.
         """
         if not self.model.relations[AUTH_HELPER_RELATION_NAME]:
             event.fail(EVENT_FAIL_RELATION_MISSING_MESSAGE)
             return
 
-        if not self._digest:
-            raise SquidPathNotFoundError(EVENT_FAIL_HTDIGEST_FILE_MISSING)
+        digest = self._charm_state.get_digest()
 
         username = event.params["username"]
-        if self._digest.get_hash(username):
+        if digest.get_hash(username):
             event.fail(f"User {username} already exists.")
             return
 
         generated_password = pwd.genword()
-        if self._digest.set_password(username, generated_password):
+        if digest.set_password(username, generated_password):
             event.fail("An error occurred when saving the htdigest file.")
             return
 
-        self._digest.save()
-        results = {"username": username, "password": generated_password, "realm": DIGEST_REALM}
+        digest.save()
+        results = {
+            "username": username,
+            "password": generated_password,
+            "realm": self._charm_state.digest_auth_config.realm,
+        }
         event.set_results(results)
 
+    @inject_charm_state
     def _on_remove_user(self, event: ops.ActionEvent) -> None:
         """Handle the remove user action.
 
@@ -156,47 +136,38 @@ class DigestSquidAuthHelperCharm(ops.CharmBase):
         This action fails if the user doesn't exists.
 
         Args:
-            event: Event for the remove user action
-
-        Raises:
-            SquidPathNotFoundError: If the digest file is missing
-            (should be created at install)
+            event: Event for the remove user action.
         """
         if not self.model.relations[AUTH_HELPER_RELATION_NAME]:
             event.fail(EVENT_FAIL_RELATION_MISSING_MESSAGE)
             return
 
-        if not self._digest:
-            raise SquidPathNotFoundError(EVENT_FAIL_HTDIGEST_FILE_MISSING)
+        digest = self._charm_state.get_digest()
 
         username = event.params["username"]
-        if not self._digest.delete(username):
+        if not digest.delete(username):
             event.fail(f"User {username} doesn't exists.")
             return
 
-        self._digest.save()
+        digest.save()
         event.set_results({"success": True})
 
+    @inject_charm_state
     def _on_list_users(self, event: ops.ActionEvent) -> None:
         """Handle the list users action.
 
         List the users available in the Squid proxy ACLs.
 
         Args:
-            event: Event for the list users action
-
-        Raises:
-            SquidPathNotFoundError: If the digest file is missing
-            (should be created at install)
+            event: Event for the list users action.
         """
         if not self.model.relations[AUTH_HELPER_RELATION_NAME]:
             event.fail(EVENT_FAIL_RELATION_MISSING_MESSAGE)
             return
 
-        if not self._digest:
-            raise SquidPathNotFoundError(EVENT_FAIL_HTDIGEST_FILE_MISSING)
+        digest = self._charm_state.get_digest()
 
-        user_list = {user: self._digest.get_hash(user) for user in self._digest.users()}
+        user_list = {user: digest.get_hash(user) for user in digest.users()}
         headers = ["Username", "Hash password"]
         event.set_results(
             {
@@ -208,25 +179,12 @@ class DigestSquidAuthHelperCharm(ops.CharmBase):
     def _block_if_not_related_to_squid(self) -> ops.StatusBase:
         """Set the charm to BlockedStatus if no squid-auth-helper relation exists.
 
-        Returns: A blocked status if no relation exists, an active status otherwise
+        Returns: A blocked status if no relation exists, an active status otherwise.
         """
         relations = self.model.relations[AUTH_HELPER_RELATION_NAME]
         if not relations:
             return ops.BlockedStatus(STATUS_BLOCKED_RELATION_MISSING_MESSAGE)
         return ops.ActiveStatus()
-
-    def _check_squid_tools_path(self) -> None:
-        """Define config and tools folders of squid.
-
-        Raises:
-            SquidPathNotFoundError: If the tools folder can't be found
-        """
-        self._squid_tools_path = SQUID_TOOLS_PATH
-
-        if not self._squid_tools_path.exists():
-            self._squid_tools_path = SQUID3_TOOLS_PATH
-            if not self._squid_tools_path.exists():
-                raise SquidPathNotFoundError("Squid tools path can't be found")
 
 
 if __name__ == "__main__":  # pragma: nocover
