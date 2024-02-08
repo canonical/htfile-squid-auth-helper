@@ -16,6 +16,7 @@ import ops
 import pytest
 from ops.testing import Harness
 from passlib.apache import HtdigestFile
+from unit.constants import DEFAULT_REALM, DIGEST_FILENAME, DIGEST_FILEPATH
 
 import charm
 import charm_state
@@ -23,43 +24,13 @@ from exceptions import SquidPathNotFoundError
 
 USER = "test"
 USER_CREDENTIALS = "password"
-DIGEST_FILENAME = "password-file"
-DEFAULT_REALM = "digest"
-
-
-@pytest.fixture(name="tools_directory")
-def tools_directory_fixture(monkeypatch: pytest.MonkeyPatch) -> typing.Generator[None, None, None]:
-    # pylint: disable=consider-using-with
-    tmp_digest_dir = TemporaryDirectory()
-
-    squid_tools_path = Path(tmp_digest_dir.name, "tools", "squid")
-    squid_tools_path.mkdir(parents=True)
-
-    monkeypatch.setattr(charm_state, "SQUID_TOOLS_PATH", squid_tools_path)
-    monkeypatch.setattr(
-        charm_state, "SQUID3_TOOLS_PATH", Path(tmp_digest_dir.name, "tools", "squid3")
-    )
-
-    yield
-
-    tmp_digest_dir.cleanup()
-
-
-@pytest.fixture(name="digest_file")
-def digest_file_fixture() -> typing.Generator[Path, None, None]:
-    # pylint: disable=consider-using-with
-    tmp_digest_dir = TemporaryDirectory()
-
-    yield Path(tmp_digest_dir.name, "etc", "squid-auth", DIGEST_FILENAME)
-
-    tmp_digest_dir.cleanup()
 
 
 @pytest.fixture(name="configured_charm")
 def configured_charm_fixture() -> typing.Generator[Harness, None, None]:
     # pylint: disable=consider-using-with
     tmp_digest_dir = TemporaryDirectory()
-    digest_file = Path(tmp_digest_dir.name, "etc", "squid-auth", DIGEST_FILENAME)
+    digest_file = Path(tmp_digest_dir.name, DIGEST_FILEPATH, DIGEST_FILENAME)
 
     harness = Harness(charm.DigestSquidAuthHelperCharm)
     harness.set_leader(True)
@@ -185,7 +156,10 @@ def test_remove_user_action(configured_charm: Harness) -> None:
 
     assert event.set_results.call_count == 1
     event.set_results.assert_called_with({"success": True})
-    assert digest.load_if_changed()
+
+    # Reload from the file as the charm altered the digest file
+    digest.load()
+
     assert not digest.get_hash(USER)
     assert isinstance(configured_charm.model.unit.status, ops.ActiveStatus)
 
