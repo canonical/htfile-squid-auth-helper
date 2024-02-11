@@ -90,7 +90,7 @@ def test_auth_helper_relation(digest_charm: Harness) -> None:
     assert auth_params
 
     loaded_auth_params = json.loads(auth_params)[0]
-    assert loaded_auth_params["scheme"] == str(AuthenticationTypeEnum.DIGEST)
+    assert loaded_auth_params["scheme"] == AuthenticationTypeEnum.DIGEST.value
     assert loaded_auth_params["children"] == "20 startup=0 idle=1"
 
     squid_vault_file_auth = (
@@ -112,7 +112,7 @@ def test_auth_helper_relation_basic_auth(basic_charm: Harness) -> None:
     assert auth_params
 
     loaded_auth_params = json.loads(auth_params)[0]
-    assert loaded_auth_params["scheme"] == str(AuthenticationTypeEnum.BASIC)
+    assert loaded_auth_params["scheme"] == AuthenticationTypeEnum.BASIC.value
     assert loaded_auth_params["children"] == "20 startup=0 idle=1"
 
     squid_vault_file_auth = (
@@ -182,9 +182,11 @@ def test_create_user_action(configured_charm: Harness, vault: HtdigestFile | Htp
     configured_charm.charm._on_create_user(event)
 
     assert event.set_results.call_count == 1
-    event.set_results.assert_called_with(
-        {"username": USER, "password": unittest.mock.ANY, "realm": DEFAULT_REALM}
-    )
+    asserted_args = {"username": USER, "password": unittest.mock.ANY}
+    if isinstance(vault, HtdigestFile):
+        asserted_args.update({"realm": DEFAULT_REALM})
+    event.set_results.assert_called_with(asserted_args)
+
     vault.path = configured_charm.charm.config["vault_filepath"]
     vault.load()
     assert vault.get_hash(USER)

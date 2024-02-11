@@ -13,6 +13,7 @@ import ops
 from passlib import pwd
 from tabulate import tabulate
 
+from charm_state import AuthenticationTypeEnum
 from charm_state import inject as inject_charm_state
 
 AUTH_HELPER_RELATION_NAME = "squid-auth-helper"
@@ -126,8 +127,18 @@ class HtfileSquidAuthHelperCharm(ops.CharmBase):
         results = {
             "username": username,
             "password": generated_password,
-            "realm": self._charm_state.squid_auth_config.realm,
         }
+
+        if (
+            self._charm_state.squid_auth_config.authentication_type
+            == AuthenticationTypeEnum.DIGEST
+        ):
+            results.update(
+                {
+                    "realm": self._charm_state.squid_auth_config.realm,
+                }
+            )
+
         event.set_results(results)
 
     @inject_charm_state
