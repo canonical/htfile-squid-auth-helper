@@ -5,32 +5,33 @@
 
 # The charm package name, no spaces (required)
 # See https://juju.is/docs/sdk/naming#heading--naming-charms for guidance.
-name: digest-squid-auth-helper
+name: htfile-squid-auth-helper
  
 # The following metadata are human-readable and will be published prominently on Charmhub.
 
 # (Recommended)
-display-name: Squid Proxy digest auth helper
+display-name: Squid Proxy auth helper that supports basic and digesut auth
 
 # (Required)
 summary: |
-  Digest Auth for Squid Proxy
+  Ht-file Auth for Squid Proxy
 docs: https://TODO
-issues: https://github.com/canonical/digest-squid-auth-helper/issues
+issues: https://github.com/canonical/htfile-squid-auth-helper/issues
 maintainers: 
   - https://launchpad.net/~canonical-is-devops
-source: https://github.com/canonical/digest-squid-auth-helper
+source: https://github.com/canonical/htfile-squid-auth-helper
 
 description: |
   A [Juju](https://juju.is/) subordinate [charm](https://juju.is/docs/olm/charmed-operators) for
-  the [Squid Reverseproxy charm](https://charmhub.io/squid-reverseproxy) that allow digest
-  authentication using squid-auth-helper relation.
+  the [Squid Reverseproxy charm](https://charmhub.io/squid-reverseproxy) that allows
+  authentication digest or basic authentication using squid-auth-helper relation.
 
   As a subordinate charm this charm requires the [Squid Reverseproxy charm](https://charmhub.io/squid-reverseproxy)
-  to be deployed next to it.
+  to be deployed and integrated with it.
 
-  The charm brings digest authentication support to the Squid Reverseproxy using the `squd-auth-helper` charm relation.
-  It allows you to manage user credentials through charm actions (create-user, remove-user, list-users).
+  The charm brings digest or basic authentication support to the Squid Reverseproxy using the `squd-auth-helper` charm relation.
+  It allows you to manage user credentials through charm actions (create-user, remove-user, list-users), and configure authentication
+  parameters using charm configuration
 
 subordinate: true
 series:

@@ -23,8 +23,8 @@ STATUS_BLOCKED_RELATION_MISSING_MESSAGE = (
 )
 
 
-class DigestSquidAuthHelperCharm(ops.CharmBase):
-    """A subordinate charm enabling support for digest auth on Squid Reverseproxy charm."""
+class HtfileSquidAuthHelperCharm(ops.CharmBase):
+    """A subordinate charm enabling support for basic or digest auth on Squid Reverseproxy."""
 
     def __init__(self, *args):
         """Construct the charm.
@@ -68,15 +68,16 @@ class DigestSquidAuthHelperCharm(ops.CharmBase):
 
     def _on_squid_auth_helper_relation_broken(self, _: ops.RelationBrokenEvent) -> None:
         """Handle the relation broken event for squid-auth-helper relation of the charm."""
+        # Todo: Remove vault file
         self.unit.status = self._block_if_not_related_to_squid()
 
     @inject_charm_state
     def _on_install(self, _: ops.StartEvent) -> None:
         """Handle the start of the charm."""
-        digest_filepath = self._charm_state.digest_auth_config.digest_filepath
-        digest_filepath.parent.mkdir(parents=True, exist_ok=True)
-        digest_filepath.parent.chmod(0o755)
-        digest_filepath.touch(0o644, exist_ok=True)
+        vault_filepath = self._charm_state.squid_auth_config.vault_filepath
+        vault_filepath.parent.mkdir(parents=True, exist_ok=True)
+        vault_filepath.parent.chmod(0o755)
+        vault_filepath.touch(0o644, exist_ok=True)
 
         self.unit.status = self._block_if_not_related_to_squid()
 
@@ -89,6 +90,7 @@ class DigestSquidAuthHelperCharm(ops.CharmBase):
             self.unit.status = ops.BlockedStatus(STATUS_BLOCKED_RELATION_MISSING_MESSAGE)
             return
 
+        # Todo: Remove vault file if authentication_type changed
         for relation in relations:
             relation.data[self.unit]["auth-params"] = json.dumps(
                 self._charm_state.get_as_relation_data()
@@ -108,23 +110,23 @@ class DigestSquidAuthHelperCharm(ops.CharmBase):
             event.fail(EVENT_FAIL_RELATION_MISSING_MESSAGE)
             return
 
-        digest = self._charm_state.get_digest()
+        vault = self._charm_state.get_auth_vault()
 
         username = event.params["username"]
-        if digest.get_hash(username):
+        if vault.get_hash(username):
             event.fail(f"User {username} already exists.")
             return
 
         generated_password = pwd.genword()
-        if digest.set_password(username, generated_password):
-            event.fail("An error occurred when saving the htdigest file.")
+        if vault.set_password(username, generated_password):
+            event.fail("An error occurred when saving the vault file.")
             return
 
-        digest.save()
+        vault.save()
         results = {
             "username": username,
             "password": generated_password,
-            "realm": self._charm_state.digest_auth_config.realm,
+            "realm": self._charm_state.squid_auth_config.realm,
         }
         event.set_results(results)
 
@@ -142,14 +144,14 @@ class DigestSquidAuthHelperCharm(ops.CharmBase):
             event.fail(EVENT_FAIL_RELATION_MISSING_MESSAGE)
             return
 
-        digest = self._charm_state.get_digest()
+        vault = self._charm_state.get_auth_vault()
 
         username = event.params["username"]
-        if not digest.delete(username):
+        if not vault.delete(username):
             event.fail(f"User {username} doesn't exists.")
             return
 
-        digest.save()
+        vault.save()
         event.set_results({"success": True})
 
     @inject_charm_state
@@ -165,14 +167,14 @@ class DigestSquidAuthHelperCharm(ops.CharmBase):
             event.fail(EVENT_FAIL_RELATION_MISSING_MESSAGE)
             return
 
-        digest = self._charm_state.get_digest()
+        vault = self._charm_state.get_auth_vault()
 
-        user_list = {user: digest.get_hash(user) for user in digest.users()}
+        user_list = {user: vault.get_hash(user) for user in vault.users()}
         headers = ["Username", "Hash password"]
         event.set_results(
             {
                 "formatted": tabulate(user_list.items(), headers=headers, tablefmt="grid"),
-                "list": user_list,
+                "list": str(user_list),
             }
         )
 
@@ -188,4 +190,4 @@ class DigestSquidAuthHelperCharm(ops.CharmBase):
 
 
 if __name__ == "__main__":  # pragma: nocover
-    ops.main.main(DigestSquidAuthHelperCharm)
+    ops.main.main(HtfileSquidAuthHelperCharm)

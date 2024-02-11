@@ -10,39 +10,49 @@ options:
     type: int
     default: 20
     description: |
-      Maximum amount of child process created to manage digest authentication.
+      Maximum amount of child process created to manage authentication.
   children_startup:
     type: int
     default: 0
     description: |
-      Initial amount of child process to manage digest authentication created at startup.
+      Initial amount of child process to manage  authentication created at startup.
   children_idle:
     type: int
     default: 1
     description: |
-      Amount of idle child process to manage digest authentication that must be available at any time.
-  digest_filepath:
+      Amount of idle child process to manage  authentication that must be available at any time.
+  vault_filepath:
     type: string
     default: "/etc/squid-auth/password-file"
     description: |
-      Path where the digest file storing usernames and passwords will be stored.
+      Path where usernames and passwords will be stored.
   nonce_garbage_interval:
     type: int
     default: 5
     description: |
       Specifies the interval in minutes that nonces that have been issued to client_agent's are checked for validity.
+      Required if authentication_type is "digest".
   nonce_max_duration:
     type: int
     default: 30
     description: |
       Specifies the maximum length of time in minutes a given nonce will be valid for.
+      Required if authentication_type is "digest".
   nonce_max_count:
     type: int
     default: 50
     description: |
       Specifies the maximum number of times a given nonce can be used.
+      Required if authentication_type is "digest".
   realm:
+    type: string
+    default: "squid"
+    description: |
+      Name of the HTTP authentication realm.
+      Required if authentication_type is "digest".
+  authentication_type:
     type: string
     default: "digest"
     description: |
-      Name of the HTTP authentication realm.
+      Specifies which authentication type Squid will provide. Currently supports "basic" and "digest".
+      Only one authentication type is active at a time.

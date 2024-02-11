@@ -13,7 +13,7 @@ create-user:
     - username
 remove-user:
   description: |
-    Remove an existing user from the digest file.
+    Remove an existing user from the vault file.
   properties:
     username:
       description: |

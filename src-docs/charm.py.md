@@ -8,17 +8,16 @@ A subordinate charm enabling support for digest authentication on Squid Reversep
 **Global Variables**
 ---------------
 - **AUTH_HELPER_RELATION_NAME**
-- **DIGEST_REALM**
 - **EVENT_FAIL_RELATION_MISSING_MESSAGE**
 - **STATUS_BLOCKED_RELATION_MISSING_MESSAGE**
 
 
 ---
 
-## <kbd>class</kbd> `DigestSquidAuthHelperCharm`
-A subordinate charm enabling support for digest auth on Squid Reverseproxy charm. 
+## <kbd>class</kbd> `HtfileSquidAuthHelperCharm`
+A subordinate charm enabling support for basic or digest auth on Squid Reverseproxy charm. 
 
-<a href="../src/charm.py#L32"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../src/charm.py#L29"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ### <kbd>function</kbd> `__init__`
 

@@ -5,6 +5,6 @@
 
 from pathlib import Path
 
-DIGEST_FILENAME = "password-file"
-DIGEST_FILEPATH = Path("etc/squid-auth")
-DEFAULT_REALM = "digest"
+VAULT_FILENAME = "password-file"
+VAULT_FILEPATH = Path("etc/squid-auth")
+DEFAULT_REALM = "squid"
