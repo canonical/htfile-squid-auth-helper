@@ -171,9 +171,9 @@ class CharmState:
         """
         program = f"{self.squid_tools_path}/"
         return (
-            f"{program}{SQUID_DIGEST_AUTH_PROGRAM} -c {self.squid_auth_config.vault_filepath}"
+            f"{program}{str(SQUID_DIGEST_AUTH_PROGRAM)} -c {self.squid_auth_config.vault_filepath}"
             if self.squid_auth_config.authentication_type == AuthenticationTypeEnum.DIGEST
-            else f"{program}{SQUID_BASIC_AUTH_PROGRAM} {self.squid_auth_config.vault_filepath}"
+            else f"{program}{str(SQUID_BASIC_AUTH_PROGRAM)} {self.squid_auth_config.vault_filepath}"
         )
 
 
