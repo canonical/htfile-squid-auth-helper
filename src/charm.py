@@ -67,10 +67,16 @@ class HtfileSquidAuthHelperCharm(ops.CharmBase):
         )
         self.unit.status = ops.ActiveStatus()
 
+    @inject_charm_state
     def _on_squid_auth_helper_relation_broken(self, _: ops.RelationBrokenEvent) -> None:
         """Handle the relation broken event for squid-auth-helper relation of the charm."""
-        # Todo: Remove vault file
-        self.unit.status = self._block_if_not_related_to_squid()
+        status = self._block_if_not_related_to_squid()
+        if isinstance(status, ops.BlockedStatus):
+            vault_filepath = self._charm_state.squid_auth_config.vault_filepath
+            vault_filepath.unlink()
+            vault_filepath.touch(0o644, exist_ok=True)
+
+        self.unit.status = status
 
     @inject_charm_state
     def _on_install(self, _: ops.StartEvent) -> None:
@@ -91,7 +97,14 @@ class HtfileSquidAuthHelperCharm(ops.CharmBase):
             self.unit.status = ops.BlockedStatus(STATUS_BLOCKED_RELATION_MISSING_MESSAGE)
             return
 
-        # Todo: Remove vault file if authentication_type changed
+        # If authentication_type has changed the vault because unparsable, we need to delete it
+        try:
+            self._charm_state.get_auth_vault()
+        except ValueError:
+            vault_filepath = self._charm_state.squid_auth_config.vault_filepath
+            vault_filepath.unlink()
+            vault_filepath.touch(0o644)
+
         for relation in relations:
             relation.data[self.unit]["auth-params"] = json.dumps(
                 self._charm_state.get_as_relation_data()
@@ -112,10 +125,11 @@ class HtfileSquidAuthHelperCharm(ops.CharmBase):
             return
 
         vault = self._charm_state.get_auth_vault()
+        results = {}
 
         username = event.params["username"]
         if vault.get_hash(username):
-            event.fail(f"User {username} already exists.")
+            event.set_results({"message": f"User {username} already exists."})
             return
 
         generated_password = pwd.genword()
@@ -127,6 +141,7 @@ class HtfileSquidAuthHelperCharm(ops.CharmBase):
         results = {
             "username": username,
             "password": generated_password,
+            "message": f"User {username} created.",
         }
 
         if (
@@ -156,14 +171,16 @@ class HtfileSquidAuthHelperCharm(ops.CharmBase):
             return
 
         vault = self._charm_state.get_auth_vault()
+        results = {}
 
         username = event.params["username"]
-        if not vault.delete(username):
-            event.fail(f"User {username} doesn't exists.")
-            return
+        if vault.delete(username):
+            results.update({"message": f"User {username} removed."})
+        else:
+            results.update({"message": f"User {username} doesn't exists."})
 
         vault.save()
-        event.set_results({"success": True})
+        event.set_results(results)
 
     @inject_charm_state
     def _on_list_users(self, event: ops.ActionEvent) -> None:

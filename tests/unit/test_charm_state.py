@@ -23,6 +23,7 @@ from exceptions import CharmConfigInvalidError, SquidPathNotFoundError
 
 @pytest.fixture(name="mocked_charm")
 def mocked_charm_fixture() -> Generator[CharmBase, None, None]:
+    """A mocked charm fixture."""
     vault_filepath = VAULT_FILEPATH.joinpath(VAULT_FILENAME)
     digest_realm = DEFAULT_REALM
     config = {"vault_filepath": vault_filepath, "realm": digest_realm}
@@ -34,6 +35,11 @@ def mocked_charm_fixture() -> Generator[CharmBase, None, None]:
 
 @pytest.mark.usefixtures("tools_directory")
 def test_charm_state_from_charm(mocked_charm: CharmBase) -> None:
+    """
+    arrange: A mocked charm.
+    act: Create the charmstate from the charm.
+    assert: The charmstate should have the expected attributes.
+    """
     test_charm_state = CharmState.from_charm(mocked_charm)
 
     assert test_charm_state.squid_auth_config.vault_filepath == VAULT_FILEPATH.joinpath(
@@ -46,6 +52,11 @@ def test_charm_state_from_charm(mocked_charm: CharmBase) -> None:
 
 @pytest.mark.usefixtures("tools_directory")
 def test_charm_state_from_charm_basic() -> None:
+    """
+    arrange: A mocked charm with basic as authentication_type config.
+    act: Create the charmstate from the charm.
+    assert: The charmstate should have the expected attributes.
+    """
     vault_filepath = VAULT_FILEPATH.joinpath(VAULT_FILENAME)
     config = {"vault_filepath": vault_filepath, "authentication_type": "basic"}
     charm = MagicMock(spec=CharmBase)
@@ -85,6 +96,11 @@ def test_charm_state_from_charm_missing_filepath(
     vault_filepath: str,
     expected: str,
 ) -> None:
+    """
+    arrange: A mocked charm with a different set of wrong configuration values.
+    act: Create the charmstate from the charm.
+    assert: The expected validation exception should be raised with the expected message.
+    """
     charm = MagicMock(spec=CharmBase)
     charm.config = {
         "nonce_garbage_interval": nonce_garbage_interval,
@@ -101,6 +117,11 @@ def test_charm_state_from_charm_missing_filepath(
 
 @pytest.mark.usefixtures("tools_directory")
 def test_charm_state_from_charm_digest_missing_realm() -> None:
+    """
+    arrange: A mocked charm with digest as authentication_type config and no realm config set.
+    act: Create the charmstate from the charm.
+    assert: The expected validation exception should be raised with the expected message.
+    """
     charm = MagicMock(spec=CharmBase)
     charm.config = {
         "vault_filepath": "/abc",
@@ -114,6 +135,11 @@ def test_charm_state_from_charm_digest_missing_realm() -> None:
 def test_charm_state_from_charm_squid3_folder(
     monkeypatch: pytest.MonkeyPatch, mocked_charm: CharmBase, tmp_path: Path
 ) -> None:
+    """
+    arrange: A mocked charm with an existing squid3 folder, but non existing squid folder.
+    act: Create the charmstate from the charm.
+    assert: The charmstate squid_tools_path attribute should have the expected value.
+    """
     squid_tools_path = Path(str(tmp_path), "tools", "squid3")
     squid_tools_path.mkdir(parents=True)
 
@@ -126,6 +152,11 @@ def test_charm_state_from_charm_squid3_folder(
 
 
 def test_charm_state_from_charm_no_squid_folder(mocked_charm: CharmBase) -> None:
+    """
+    arrange: A mocked charm with no squid folder created.
+    act: Create the charmstate from the charm.
+    assert: The expected exception should be raised with the expected message.
+    """
     with pytest.raises(SquidPathNotFoundError) as exc:
         CharmState.from_charm(mocked_charm)
 
@@ -133,6 +164,11 @@ def test_charm_state_from_charm_no_squid_folder(mocked_charm: CharmBase) -> None
 
 
 def test_charm_state_get_digest(vault_file: Path) -> None:
+    """
+    arrange: A charmstate with default authentication_type (digest).
+    act: Get the vault from get_auth_vault method.
+    assert: The vault should be an instance of HtdigestFile.
+    """
     vault_file.parent.mkdir(parents=True, exist_ok=True)
     vault_file.touch()
 
@@ -144,6 +180,11 @@ def test_charm_state_get_digest(vault_file: Path) -> None:
 
 
 def test_charm_state_get_basic(vault_file: Path) -> None:
+    """
+    arrange: A charmstate with basic as authentication_type.
+    act: Get the vault from get_auth_vault method.
+    assert: The vault should be an instance of HtpasswdFile.
+    """
     vault_file.parent.mkdir(parents=True, exist_ok=True)
     vault_file.touch()
 
@@ -155,6 +196,11 @@ def test_charm_state_get_basic(vault_file: Path) -> None:
 
 
 def test_charm_state_get_vault_no_file() -> None:
+    """
+    arrange: A charmstate with default authentication_type (digest) but missing vault file.
+    act: Get the vault from get_auth_vault method.
+    assert: The expected exception should be raised with the expected message.
+    """
     squid_auth_config = SquidAuthConfig(realm=DEFAULT_REALM, vault_filepath="/abc")
     test_charm_state = CharmState(squid_auth_config=squid_auth_config, squid_tools_path="/abc")
 
