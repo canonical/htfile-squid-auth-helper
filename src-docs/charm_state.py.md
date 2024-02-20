@@ -11,28 +11,6 @@ State of the Charm.
 - **SQUID_DIGEST_AUTH_PROGRAM**
 - **SQUID_BASIC_AUTH_PROGRAM**
 
----
-
-<a href="../src/charm_state.py#L194"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
-
-## <kbd>function</kbd> `inject`
-
-```python
-inject(
-    func: Callable[[CharmBase, EventBase], Any]
-) → Callable[, Callable[[CharmBase, EventBase], Any]]
-```
-
-Create a decorator that injects the charm_state into the charm instance. 
-
-
-
-**Args:**
- 
- - <b>`func`</b>:  The method to wrap. 
-
-Returns: A wrapper method. 
-
 
 ---
 
@@ -67,7 +45,7 @@ State of the Charm.
 
 ---
 
-<a href="../src/charm_state.py#L78"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../src/charm_state.py#L77"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ### <kbd>classmethod</kbd> `from_charm`
 
@@ -93,7 +71,7 @@ Returns: An instance of the CharmState object.
 
 ---
 
-<a href="../src/charm_state.py#L141"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../src/charm_state.py#L140"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ### <kbd>function</kbd> `get_as_relation_data`
 
@@ -107,7 +85,7 @@ Returns: A dictionary with CharmState data.
 
 ---
 
-<a href="../src/charm_state.py#L122"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../src/charm_state.py#L121"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ### <kbd>function</kbd> `get_auth_vault`
 
@@ -127,7 +105,7 @@ Returns: An instance of HtdigestFile or HtpasswdFile.
 
 ---
 
-<a href="../src/charm_state.py#L115"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../src/charm_state.py#L114"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ### <kbd>function</kbd> `vault_file_exists`
 

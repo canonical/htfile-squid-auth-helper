@@ -4,13 +4,12 @@
 """State of the Charm."""
 
 import dataclasses
-import functools
 import itertools
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
-from ops import CharmBase, EventBase
+from ops import CharmBase
 from passlib.apache import HtdigestFile, HtpasswdFile
 from pydantic import BaseModel, ValidationError
 
@@ -189,38 +188,3 @@ def _get_squid_tools_path() -> Path:
         raise SquidPathNotFoundError("Squid tools path can't be found")
 
     return SQUID_TOOLS_PATH if SQUID_TOOLS_PATH.exists() else SQUID3_TOOLS_PATH
-
-
-def inject(
-    func: Callable[[CharmBase, EventBase], Any]
-) -> Callable[..., Callable[[CharmBase, EventBase], Any]]:
-    """Create a decorator that injects the charm_state into the charm instance.
-
-    Args:
-        func: The method to wrap.
-
-    Returns: A wrapper method.
-    """
-
-    @functools.wraps(func)
-    def wrapper(charm: CharmBase, event: EventBase) -> Any:
-        """Instantiate and inject the CharmState before the hook is executed.
-
-        Args:
-            charm: The Charm instance.
-            event: The event for that hook.
-
-        Returns: The outcome of the wrapped hook method
-        """
-        attribute_name = "_charm_state"
-
-        setattr(charm, attribute_name, CharmState.from_charm(charm))
-
-        try:
-            result = func(charm, event)
-        finally:
-            setattr(charm, attribute_name, None)
-
-        return result
-
-    return wrapper

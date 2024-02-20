@@ -13,8 +13,7 @@ import ops
 from passlib import pwd
 from tabulate import tabulate
 
-from charm_state import AuthenticationTypeEnum
-from charm_state import inject as inject_charm_state
+from charm_state import AuthenticationTypeEnum, CharmState
 
 AUTH_HELPER_RELATION_NAME = "squid-auth-helper"
 
@@ -35,8 +34,6 @@ class HtfileSquidAuthHelperCharm(ops.CharmBase):
         """
         super().__init__(*args)
 
-        self._charm_state = None
-
         self.framework.observe(self.on.install, self._on_install)
         self.framework.observe(self.on.config_changed, self._on_config_changed)
 
@@ -53,7 +50,6 @@ class HtfileSquidAuthHelperCharm(ops.CharmBase):
         self.framework.observe(self.on.remove_user_action, self._on_remove_user)
         self.framework.observe(self.on.list_users_action, self._on_list_users)
 
-    @inject_charm_state
     def _on_squid_auth_helper_relation_created(self, event: ops.RelationCreatedEvent) -> None:
         """Handle the relation created event for squid-auth-helper relation of the charm.
 
@@ -62,35 +58,37 @@ class HtfileSquidAuthHelperCharm(ops.CharmBase):
         Args:
             event: Event for the squid-auth-helper relation created.
         """
+        charm_state = CharmState.from_charm(self)
         event.relation.data[self.unit]["auth-params"] = json.dumps(
-            self._charm_state.get_as_relation_data()
+            charm_state.get_as_relation_data()
         )
         self.unit.status = ops.ActiveStatus()
 
-    @inject_charm_state
     def _on_squid_auth_helper_relation_broken(self, _: ops.RelationBrokenEvent) -> None:
         """Handle the relation broken event for squid-auth-helper relation of the charm."""
+        charm_state = CharmState.from_charm(self)
         status = self._block_if_not_related_to_squid()
         if isinstance(status, ops.BlockedStatus):
-            vault_filepath = self._charm_state.squid_auth_config.vault_filepath
+            vault_filepath = charm_state.squid_auth_config.vault_filepath
             vault_filepath.unlink()
             vault_filepath.touch(0o644, exist_ok=True)
 
         self.unit.status = status
 
-    @inject_charm_state
     def _on_install(self, _: ops.StartEvent) -> None:
         """Handle the start of the charm."""
-        vault_filepath = self._charm_state.squid_auth_config.vault_filepath
+        charm_state = CharmState.from_charm(self)
+
+        vault_filepath = charm_state.squid_auth_config.vault_filepath
         vault_filepath.parent.mkdir(parents=True, exist_ok=True)
         vault_filepath.parent.chmod(0o755)
         vault_filepath.touch(0o644, exist_ok=True)
 
         self.unit.status = self._block_if_not_related_to_squid()
 
-    @inject_charm_state
     def _on_config_changed(self, _: ops.ConfigChangedEvent) -> None:
         """Handle configuration changes made by user."""
+        charm_state = CharmState.from_charm(self)
         relations = self.model.relations[AUTH_HELPER_RELATION_NAME]
 
         if not relations:
@@ -99,19 +97,18 @@ class HtfileSquidAuthHelperCharm(ops.CharmBase):
 
         # If authentication_type has changed the vault because unparsable, we need to delete it
         try:
-            self._charm_state.get_auth_vault()
+            charm_state.get_auth_vault()
         except ValueError:
-            vault_filepath = self._charm_state.squid_auth_config.vault_filepath
+            vault_filepath = charm_state.squid_auth_config.vault_filepath
             vault_filepath.unlink()
             vault_filepath.touch(0o644)
 
         for relation in relations:
             relation.data[self.unit]["auth-params"] = json.dumps(
-                self._charm_state.get_as_relation_data()
+                charm_state.get_as_relation_data()
             )
         self.unit.status = ops.ActiveStatus()
 
-    @inject_charm_state
     def _on_create_user(self, event: ops.ActionEvent) -> None:
         """Handle the create user action.
 
@@ -120,11 +117,13 @@ class HtfileSquidAuthHelperCharm(ops.CharmBase):
         Args:
             event: Event for the create user action.
         """
+        charm_state = CharmState.from_charm(self)
+
         if not self.model.relations[AUTH_HELPER_RELATION_NAME]:
             event.fail(EVENT_FAIL_RELATION_MISSING_MESSAGE)
             return
 
-        vault = self._charm_state.get_auth_vault()
+        vault = charm_state.get_auth_vault()
         results = {}
 
         username = event.params["username"]
@@ -144,19 +143,15 @@ class HtfileSquidAuthHelperCharm(ops.CharmBase):
             "message": f"User {username} created.",
         }
 
-        if (
-            self._charm_state.squid_auth_config.authentication_type
-            == AuthenticationTypeEnum.DIGEST
-        ):
+        if charm_state.squid_auth_config.authentication_type == AuthenticationTypeEnum.DIGEST:
             results.update(
                 {
-                    "realm": self._charm_state.squid_auth_config.realm,
+                    "realm": charm_state.squid_auth_config.realm,
                 }
             )
 
         event.set_results(results)
 
-    @inject_charm_state
     def _on_remove_user(self, event: ops.ActionEvent) -> None:
         """Handle the remove user action.
 
@@ -166,11 +161,13 @@ class HtfileSquidAuthHelperCharm(ops.CharmBase):
         Args:
             event: Event for the remove user action.
         """
+        charm_state = CharmState.from_charm(self)
+
         if not self.model.relations[AUTH_HELPER_RELATION_NAME]:
             event.fail(EVENT_FAIL_RELATION_MISSING_MESSAGE)
             return
 
-        vault = self._charm_state.get_auth_vault()
+        vault = charm_state.get_auth_vault()
         results = {}
 
         username = event.params["username"]
@@ -182,7 +179,6 @@ class HtfileSquidAuthHelperCharm(ops.CharmBase):
         vault.save()
         event.set_results(results)
 
-    @inject_charm_state
     def _on_list_users(self, event: ops.ActionEvent) -> None:
         """Handle the list users action.
 
@@ -191,11 +187,13 @@ class HtfileSquidAuthHelperCharm(ops.CharmBase):
         Args:
             event: Event for the list users action.
         """
+        charm_state = CharmState.from_charm(self)
+
         if not self.model.relations[AUTH_HELPER_RELATION_NAME]:
             event.fail(EVENT_FAIL_RELATION_MISSING_MESSAGE)
             return
 
-        vault = self._charm_state.get_auth_vault()
+        vault = charm_state.get_auth_vault()
 
         user_list = {user: vault.get_hash(user) for user in vault.users()}
         headers = ["Username", "Hash password"]
