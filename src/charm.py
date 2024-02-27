@@ -71,7 +71,7 @@ class HtfileSquidAuthHelperCharm(ops.CharmBase):
         """Handle the relation broken event for squid-auth-helper relation of the charm."""
         # TODO: Validation errors must be managed, waiting for guidelines to be defined
         charm_state = CharmState.from_charm(self)
-        status = self._block_if_not_related_to_squid()
+        status = self._compute_charm_status()
         if not self._is_related_to_squid():
             vault_filepath = charm_state.squid_auth_config.vault_filepath
             vault_filepath.unlink()
@@ -89,7 +89,7 @@ class HtfileSquidAuthHelperCharm(ops.CharmBase):
         vault_filepath.parent.chmod(0o755)
         vault_filepath.touch(0o644, exist_ok=True)
 
-        self.unit.status = self._block_if_not_related_to_squid()
+        self.unit.status = self._compute_charm_status()
 
     def _on_config_changed(self, _: ops.ConfigChangedEvent) -> None:
         """Handle configuration changes made by user."""
@@ -220,7 +220,7 @@ class HtfileSquidAuthHelperCharm(ops.CharmBase):
         """
         return bool(self.model.relations[AUTH_HELPER_RELATION_NAME])
 
-    def _block_if_not_related_to_squid(self) -> ops.StatusBase:
+    def _compute_charm_status(self) -> ops.StatusBase:
         """Set the charm to BlockedStatus if no squid-auth-helper relation exists.
 
         Returns: A blocked status if no relation exists, an active status otherwise.

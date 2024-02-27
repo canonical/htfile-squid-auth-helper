@@ -17,7 +17,7 @@ A subordinate charm enabling support for digest authentication on Squid Reversep
 ## <kbd>class</kbd> `HtfileSquidAuthHelperCharm`
 A subordinate charm enabling support for basic or digest auth on Squid Reverseproxy. 
 
-<a href="../src/charm.py#L29"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../src/charm.py#L31"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ### <kbd>function</kbd> `__init__`
 
