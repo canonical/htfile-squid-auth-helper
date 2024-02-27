@@ -83,9 +83,14 @@ class CharmState:
             CharmConfigInvalidError: For any validation error in the charm config data.
             SquidPathNotFoundError: If none of the squid tools path exists.
         """
+        mapped_config = {
+            field: charm.config[field.replace("_", "-")]
+            for field in SquidAuthConfig.model_fields
+            if field.replace("_", "-") in charm.config
+        }
+
         try:
-            # Ignores type error because of the dictionary
-            validated_charm_config = SquidAuthConfig(**dict(charm.config.items()))  # type: ignore
+            validated_charm_config = SquidAuthConfig.model_validate(mapped_config)
         except ValidationError as exc:
             error_fields = set(
                 itertools.chain.from_iterable(error["loc"] for error in exc.errors())

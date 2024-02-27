@@ -25,7 +25,7 @@ def mocked_charm_fixture() -> Generator[CharmBase, None, None]:
     """A mocked charm fixture."""
     vault_filepath = VAULT_FILEPATH.joinpath(VAULT_FILENAME)
     digest_realm = DEFAULT_REALM
-    config = {"vault_filepath": vault_filepath, "realm": digest_realm}
+    config = {"vault-filepath": vault_filepath, "realm": digest_realm}
     charm = MagicMock(spec=CharmBase)
     charm.config = config
 
@@ -57,7 +57,7 @@ def test_charm_state_from_charm_basic() -> None:
     assert: The charmstate should have the expected attributes.
     """
     vault_filepath = VAULT_FILEPATH.joinpath(VAULT_FILENAME)
-    config = {"vault_filepath": vault_filepath, "authentication_type": "basic"}
+    config = {"vault-filepath": vault_filepath, "authentication-type": "basic"}
     charm = MagicMock(spec=CharmBase)
     charm.config = config
 
@@ -102,11 +102,11 @@ def test_charm_state_from_charm_missing_filepath(
     """
     charm = MagicMock(spec=CharmBase)
     charm.config = {
-        "nonce_garbage_interval": nonce_garbage_interval,
-        "nonce_max_count": nonce_max_count,
-        "nonce_max_duration": nonce_max_duration,
+        "nonce-garbage-interval": nonce_garbage_interval,
+        "nonce-max-count": nonce_max_count,
+        "nonce-max-duration": nonce_max_duration,
         "realm": realm,
-        "vault_filepath": vault_filepath,
+        "vault-filepath": vault_filepath,
     }
     with pytest.raises(CharmConfigInvalidError) as exc:
         CharmState.from_charm(charm)
@@ -123,7 +123,7 @@ def test_charm_state_from_charm_digest_missing_realm() -> None:
     """
     charm = MagicMock(spec=CharmBase)
     charm.config = {
-        "vault_filepath": "/abc",
+        "vault-filepath": "/abc",
     }
     with pytest.raises(CharmConfigInvalidError) as exc:
         CharmState.from_charm(charm)

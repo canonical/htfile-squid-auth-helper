@@ -6,39 +6,39 @@
 # See https://juju.is/docs/config for guidance.
 
 options:
-  children_max:
+  children-max:
     type: int
     default: 20
     description: |
       Maximum amount of child process created to manage authentication.
-  children_startup:
+  children-startup:
     type: int
     default: 0
     description: |
       Initial amount of child process to manage  authentication created at startup.
-  children_idle:
+  children-idle:
     type: int
     default: 1
     description: |
       Amount of idle child process to manage  authentication that must be available at any time.
-  vault_filepath:
+  vault-filepath:
     type: string
     default: "/etc/squid-auth/password-file"
     description: |
       Path where usernames and passwords will be stored.
-  nonce_garbage_interval:
+  nonce-garbage-interval:
     type: int
     default: 5
     description: |
       Specifies the interval in minutes that nonces that have been issued to client_agent's are checked for validity.
       Required if authentication_type is "digest".
-  nonce_max_duration:
+  nonce-max-duration:
     type: int
     default: 30
     description: |
       Specifies the maximum length of time in minutes a given nonce will be valid for.
       Required if authentication_type is "digest".
-  nonce_max_count:
+  nonce-max-count:
     type: int
     default: 50
     description: |
@@ -50,7 +50,7 @@ options:
     description: |
       Name of the HTTP authentication realm.
       Required if authentication_type is "digest".
-  authentication_type:
+  authentication-type:
     type: string
     default: "digest"
     description: |

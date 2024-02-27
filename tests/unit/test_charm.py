@@ -41,7 +41,7 @@ def digest_charm_fixture(tmp_path: Path) -> typing.Generator[Harness, None, None
     harness = Harness(charm.HtfileSquidAuthHelperCharm)
     harness.set_leader(True)
     harness.add_relation(charm.AUTH_HELPER_RELATION_NAME, "squid-reverseproxy")
-    harness.update_config({"realm": DEFAULT_REALM, "vault_filepath": str(vault_file)})
+    harness.update_config({"realm": DEFAULT_REALM, "vault-filepath": str(vault_file)})
     harness.begin_with_initial_hooks()
 
     yield harness
@@ -64,7 +64,7 @@ def basic_charm_fixture(tmp_path: Path) -> typing.Generator[Harness, None, None]
     harness = Harness(charm.HtfileSquidAuthHelperCharm)
     harness.set_leader(True)
     harness.add_relation(charm.AUTH_HELPER_RELATION_NAME, "squid-reverseproxy")
-    harness.update_config({"vault_filepath": str(vault_file), "authentication_type": "basic"})
+    harness.update_config({"vault-filepath": str(vault_file), "authentication-type": "basic"})
     harness.begin_with_initial_hooks()
 
     yield harness
@@ -91,7 +91,7 @@ def test_no_relation(vault_file: Path) -> None:
     assert: The unit should be in the expected state with the expected message.
     """
     harness = Harness(charm.HtfileSquidAuthHelperCharm)
-    harness.update_config({"realm": DEFAULT_REALM, "vault_filepath": str(vault_file)})
+    harness.update_config({"realm": DEFAULT_REALM, "vault-filepath": str(vault_file)})
 
     harness.begin_with_initial_hooks()
 
@@ -110,7 +110,7 @@ def test_auth_helper_relation(digest_charm: Harness) -> None:
         and the relation data should be what we expect.
     """
     relation = digest_charm.model.get_relation(charm.AUTH_HELPER_RELATION_NAME)
-    vault_file = digest_charm.charm.config["vault_filepath"]
+    vault_file = digest_charm.charm.config["vault-filepath"]
     assert isinstance(digest_charm.model.unit.status, ops.ActiveStatus)
     assert relation
 
@@ -138,7 +138,7 @@ def test_auth_helper_relation_basic_auth(basic_charm: Harness) -> None:
         and the relation data should be what we expect.
     """
     relation = basic_charm.model.get_relation(charm.AUTH_HELPER_RELATION_NAME)
-    vault_file = basic_charm.charm.config["vault_filepath"]
+    vault_file = basic_charm.charm.config["vault-filepath"]
     assert isinstance(basic_charm.model.unit.status, ops.ActiveStatus)
     assert relation
 
@@ -229,7 +229,7 @@ def test_auth_helper_authentication_type_changed(digest_charm: Harness) -> None:
 
     digest_charm.charm._on_create_user(event)
 
-    digest_charm.update_config({"authentication_type": "basic"})
+    digest_charm.update_config({"authentication-type": "basic"})
 
     # Vault file is emptied
     vault = digest_charm.charm._get_auth_vault(CharmState.from_charm(digest_charm.charm))
@@ -254,7 +254,7 @@ def test_auth_helper_squid3_folder(
     harness = Harness(charm.HtfileSquidAuthHelperCharm)
     harness.set_leader(True)
     harness.add_relation(charm.AUTH_HELPER_RELATION_NAME, "squid-reverseproxy")
-    harness.update_config({"vault_filepath": str(vault_file)})
+    harness.update_config({"vault-filepath": str(vault_file)})
     harness.begin_with_initial_hooks()
 
     assert isinstance(harness.model.unit.status, ops.ActiveStatus)
@@ -307,7 +307,7 @@ def test_create_user_action(configured_charm: Harness, vault: HtdigestFile | Htp
         asserted_args.update({"realm": DEFAULT_REALM})
     event.set_results.assert_called_with(asserted_args)
 
-    vault.path = configured_charm.charm.config["vault_filepath"]
+    vault.path = configured_charm.charm.config["vault-filepath"]
     vault.load()
     assert vault.get_hash(USER)
     assert isinstance(configured_charm.model.unit.status, ops.ActiveStatus)
@@ -328,7 +328,7 @@ def test_remove_user_action(configured_charm: Harness, vault: HtdigestFile | Htp
     act: Remove the user.
     assert: The unit should be in the expected state and the user should not exist in the vault.
     """
-    vault.path = configured_charm.charm.config["vault_filepath"]
+    vault.path = configured_charm.charm.config["vault-filepath"]
     vault.set_password(USER, USER_CREDENTIALS)
     vault.save()
 
@@ -364,7 +364,7 @@ def test_list_users(configured_charm: Harness, vault: HtdigestFile | HtpasswdFil
     """
     username2 = f"{USER}2"
 
-    vault.path = configured_charm.charm.config["vault_filepath"]
+    vault.path = configured_charm.charm.config["vault-filepath"]
     vault.set_password(USER, USER_CREDENTIALS)
     vault.set_password(username2, USER_CREDENTIALS)
     vault.save()
@@ -400,7 +400,7 @@ def test_create_user_already_exists(
     act: Create a new user with the same username as the existing one.
     assert: The action should succeed with the expected message.
     """
-    vault.path = configured_charm.charm.config["vault_filepath"]
+    vault.path = configured_charm.charm.config["vault-filepath"]
     vault.set_password(USER, USER_CREDENTIALS)
     vault.save()
 
@@ -446,7 +446,7 @@ def test_create_user_no_relation(vault_file: Path) -> None:
         and the unit should be in the expected state.
     """
     harness = Harness(charm.HtfileSquidAuthHelperCharm)
-    harness.update_config({"realm": DEFAULT_REALM, "vault_filepath": str(vault_file)})
+    harness.update_config({"realm": DEFAULT_REALM, "vault-filepath": str(vault_file)})
     harness.begin_with_initial_hooks()
 
     event = unittest.mock.MagicMock(spec=ops.ActionEvent)
@@ -467,7 +467,7 @@ def test_create_user_no_vault_file(digest_charm: Harness) -> None:
     act: Create a user.
     assert: An exception should be raised with the expected message.
     """
-    vault_file = Path(digest_charm.charm.config["vault_filepath"])
+    vault_file = Path(digest_charm.charm.config["vault-filepath"])
     vault_file.unlink()
 
     event = unittest.mock.MagicMock(spec=ops.ActionEvent)
@@ -512,7 +512,7 @@ def test_remove_user_no_relation(vault_file: Path) -> None:
         and the unit should be in the expected state.
     """
     harness = Harness(charm.HtfileSquidAuthHelperCharm)
-    harness.update_config({"realm": DEFAULT_REALM, "vault_filepath": str(vault_file)})
+    harness.update_config({"realm": DEFAULT_REALM, "vault-filepath": str(vault_file)})
     harness.begin_with_initial_hooks()
 
     event = unittest.mock.MagicMock(spec=ops.ActionEvent)
@@ -533,7 +533,7 @@ def test_remove_user_no_vault_file(digest_charm: Harness) -> None:
     act: Remove a user.
     assert: An exception should be raised with the expected message.
     """
-    vault_file = Path(digest_charm.charm.config["vault_filepath"])
+    vault_file = Path(digest_charm.charm.config["vault-filepath"])
     vault_file.unlink()
 
     event = unittest.mock.MagicMock(spec=ops.ActionEvent)
@@ -554,7 +554,7 @@ def test_list_users_no_relation(vault_file: Path) -> None:
         and the unit should be in the expected state.
     """
     harness = Harness(charm.HtfileSquidAuthHelperCharm)
-    harness.update_config({"realm": DEFAULT_REALM, "vault_filepath": str(vault_file)})
+    harness.update_config({"realm": DEFAULT_REALM, "vault-filepath": str(vault_file)})
     harness.begin_with_initial_hooks()
 
     event = unittest.mock.MagicMock(spec=ops.ActionEvent)
@@ -574,7 +574,7 @@ def test_list_users_no_vault_file(digest_charm: Harness) -> None:
     act: Call list users action.
     assert: An exception should be raised with the expected message.
     """
-    vault_file = Path(digest_charm.charm.config["vault_filepath"])
+    vault_file = Path(digest_charm.charm.config["vault-filepath"])
     vault_file.unlink()
 
     event = unittest.mock.MagicMock(spec=ops.ActionEvent)
