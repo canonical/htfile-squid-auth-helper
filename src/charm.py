@@ -17,7 +17,9 @@ from charm_state import AuthenticationTypeEnum, CharmState
 
 AUTH_HELPER_RELATION_NAME = "squid-auth-helper"
 
-EVENT_FAIL_RELATION_MISSING_MESSAGE = "Integrate the charm to a Squid Reverseproxy charm before."
+EVENT_FAIL_RELATION_MISSING_MESSAGE = (
+    "Before running this action, integrate the charm to a Squid Reverseproxy charm."
+)
 STATUS_BLOCKED_RELATION_MISSING_MESSAGE = (
     "Waiting for integration with Squid Reverseproxy charm..."
 )
@@ -58,6 +60,7 @@ class HtfileSquidAuthHelperCharm(ops.CharmBase):
         Args:
             event: Event for the squid-auth-helper relation created.
         """
+        # TODO: Validation errors must be managed, waiting for guidelines to be defined
         charm_state = CharmState.from_charm(self)
         event.relation.data[self.unit]["auth-params"] = json.dumps(
             charm_state.get_as_relation_data()
@@ -66,17 +69,19 @@ class HtfileSquidAuthHelperCharm(ops.CharmBase):
 
     def _on_squid_auth_helper_relation_broken(self, _: ops.RelationBrokenEvent) -> None:
         """Handle the relation broken event for squid-auth-helper relation of the charm."""
+        # TODO: Validation errors must be managed, waiting for guidelines to be defined
         charm_state = CharmState.from_charm(self)
         status = self._block_if_not_related_to_squid()
-        if isinstance(status, ops.BlockedStatus):
+        if not self._is_related_to_squid():
             vault_filepath = charm_state.squid_auth_config.vault_filepath
             vault_filepath.unlink()
             vault_filepath.touch(0o644, exist_ok=True)
 
         self.unit.status = status
 
-    def _on_install(self, _: ops.StartEvent) -> None:
+    def _on_install(self, _) -> None:
         """Handle the start of the charm."""
+        # TODO: Validation errors must be managed, waiting for guidelines to be defined
         charm_state = CharmState.from_charm(self)
 
         vault_filepath = charm_state.squid_auth_config.vault_filepath
@@ -88,6 +93,7 @@ class HtfileSquidAuthHelperCharm(ops.CharmBase):
 
     def _on_config_changed(self, _: ops.ConfigChangedEvent) -> None:
         """Handle configuration changes made by user."""
+        # TODO: Validation errors must be managed, waiting for guidelines to be defined
         charm_state = CharmState.from_charm(self)
         relations = self.model.relations[AUTH_HELPER_RELATION_NAME]
 
@@ -117,6 +123,7 @@ class HtfileSquidAuthHelperCharm(ops.CharmBase):
         Args:
             event: Event for the create user action.
         """
+        # TODO: Validation errors must be managed, waiting for guidelines to be defined
         charm_state = CharmState.from_charm(self)
 
         if not self.model.relations[AUTH_HELPER_RELATION_NAME]:
@@ -161,6 +168,7 @@ class HtfileSquidAuthHelperCharm(ops.CharmBase):
         Args:
             event: Event for the remove user action.
         """
+        # TODO: Validation errors must be managed, waiting for guidelines to be defined
         charm_state = CharmState.from_charm(self)
 
         if not self.model.relations[AUTH_HELPER_RELATION_NAME]:
@@ -187,6 +195,7 @@ class HtfileSquidAuthHelperCharm(ops.CharmBase):
         Args:
             event: Event for the list users action.
         """
+        # TODO: Validation errors must be managed, waiting for guidelines to be defined
         charm_state = CharmState.from_charm(self)
 
         if not self.model.relations[AUTH_HELPER_RELATION_NAME]:
@@ -204,13 +213,19 @@ class HtfileSquidAuthHelperCharm(ops.CharmBase):
             }
         )
 
+    def _is_related_to_squid(self) -> bool:
+        """Check if the Squid proxy auth-helper relation is set.
+
+        Returns: True if the charm is related to Squid Proxy, false otherwise
+        """
+        return bool(self.model.relations[AUTH_HELPER_RELATION_NAME])
+
     def _block_if_not_related_to_squid(self) -> ops.StatusBase:
         """Set the charm to BlockedStatus if no squid-auth-helper relation exists.
 
         Returns: A blocked status if no relation exists, an active status otherwise.
         """
-        relations = self.model.relations[AUTH_HELPER_RELATION_NAME]
-        if not relations:
+        if not self._is_related_to_squid():
             return ops.BlockedStatus(STATUS_BLOCKED_RELATION_MISSING_MESSAGE)
         return ops.ActiveStatus()
 
