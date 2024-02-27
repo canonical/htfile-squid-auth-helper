@@ -616,10 +616,10 @@ def test_charm_state_get_vault_no_file(digest_charm: Harness) -> None:
     act: Get the vault from get_auth_vault method.
     assert: The expected exception should be raised with the expected message.
     """
-    charm_state = CharmState.from_charm(digest_charm.charm)
-    vault_file = charm_state.squid_auth_config.vault_filepath
+    state = CharmState.from_charm(digest_charm.charm)
+    vault_file = state.squid_auth_config.vault_filepath
     vault_file.unlink()
     with pytest.raises(SquidPathNotFoundError) as exc:
-        digest_charm.charm._get_auth_vault(charm_state)
+        digest_charm.charm._get_auth_vault(state)
 
     assert charm.VAULT_FILE_MISSING == exc.value.msg
