@@ -8,12 +8,15 @@
 """A subordinate charm enabling support for digest authentication on Squid Reverseproxy charm."""
 
 import json
+from typing import Any
 
 import ops
 from passlib import pwd
+from passlib.apache import HtdigestFile, HtpasswdFile
 from tabulate import tabulate
 
 from charm_state import AuthenticationTypeEnum, CharmState
+from exceptions import SquidPathNotFoundError
 
 AUTH_HELPER_RELATION_NAME = "squid-auth-helper"
 
@@ -23,6 +26,7 @@ EVENT_FAIL_RELATION_MISSING_MESSAGE = (
 STATUS_BLOCKED_RELATION_MISSING_MESSAGE = (
     "Waiting for integration with Squid Reverseproxy charm..."
 )
+VAULT_FILE_MISSING = "Vault file is missing, something probably went wrong during install."
 
 
 class HtfileSquidAuthHelperCharm(ops.CharmBase):
@@ -63,7 +67,7 @@ class HtfileSquidAuthHelperCharm(ops.CharmBase):
         # TODO: Validation errors must be managed, waiting for guidelines to be defined
         charm_state = CharmState.from_charm(self)
         event.relation.data[self.unit]["auth-params"] = json.dumps(
-            charm_state.get_as_relation_data()
+            self._get_charm_state_as_relation_data(charm_state)
         )
         self.unit.status = ops.ActiveStatus()
 
@@ -103,7 +107,7 @@ class HtfileSquidAuthHelperCharm(ops.CharmBase):
 
         # If authentication_type has changed the vault because unparsable, we need to delete it
         try:
-            charm_state.get_auth_vault()
+            self._get_auth_vault(charm_state)
         except ValueError:
             vault_filepath = charm_state.squid_auth_config.vault_filepath
             vault_filepath.unlink()
@@ -111,7 +115,7 @@ class HtfileSquidAuthHelperCharm(ops.CharmBase):
 
         for relation in relations:
             relation.data[self.unit]["auth-params"] = json.dumps(
-                charm_state.get_as_relation_data()
+                self._get_charm_state_as_relation_data(charm_state)
             )
         self.unit.status = ops.ActiveStatus()
 
@@ -130,7 +134,7 @@ class HtfileSquidAuthHelperCharm(ops.CharmBase):
             event.fail(EVENT_FAIL_RELATION_MISSING_MESSAGE)
             return
 
-        vault = charm_state.get_auth_vault()
+        vault = self._get_auth_vault(charm_state)
         results = {}
 
         username = event.params["username"]
@@ -175,7 +179,7 @@ class HtfileSquidAuthHelperCharm(ops.CharmBase):
             event.fail(EVENT_FAIL_RELATION_MISSING_MESSAGE)
             return
 
-        vault = charm_state.get_auth_vault()
+        vault = self._get_auth_vault(charm_state)
         results = {}
 
         username = event.params["username"]
@@ -202,7 +206,7 @@ class HtfileSquidAuthHelperCharm(ops.CharmBase):
             event.fail(EVENT_FAIL_RELATION_MISSING_MESSAGE)
             return
 
-        vault = charm_state.get_auth_vault()
+        vault = self._get_auth_vault(charm_state)
 
         user_list = {user: vault.get_hash(user) for user in vault.users()}
         headers = ["Username", "Hash password"]
@@ -228,6 +232,58 @@ class HtfileSquidAuthHelperCharm(ops.CharmBase):
         if not self._is_related_to_squid():
             return ops.BlockedStatus(STATUS_BLOCKED_RELATION_MISSING_MESSAGE)
         return ops.ActiveStatus()
+
+    def _get_auth_vault(self, charm_state: CharmState) -> HtdigestFile | HtpasswdFile:
+        """Load the vault file in an HtdigestFile or HtpasswdFile instance.
+
+        Args:
+            charm_state: The CharmState object
+
+        Returns: An instance of HtdigestFile or HtpasswdFile.
+
+        Raises:
+            SquidPathNotFoundError: If the digest file is missing.
+        """
+        if not charm_state.vault_file_exists():
+            raise SquidPathNotFoundError(VAULT_FILE_MISSING)
+
+        return (
+            HtdigestFile(
+                charm_state.squid_auth_config.vault_filepath,
+                default_realm=charm_state.squid_auth_config.realm,
+            )
+            if charm_state.squid_auth_config.authentication_type == AuthenticationTypeEnum.DIGEST
+            else HtpasswdFile(charm_state.squid_auth_config.vault_filepath, "sha256_crypt")
+        )
+
+    def _get_charm_state_as_relation_data(self, charm_state: CharmState) -> list[dict[str, Any]]:
+        """Format the CharmState data as a dictionary for relation data.
+
+        Args:
+            charm_state: The CharmState object
+
+        Returns: A dictionary with formatted CharmState data for the auth-helper relation.
+        """
+        config = charm_state.squid_auth_config
+        children = (
+            f"{config.children_max} startup={config.children_startup} idle={config.children_idle}"
+        )
+        relation_data: dict[str, str | int] = {
+            "scheme": config.authentication_type.value,
+            "program": charm_state.get_squid_authentication_program(),
+            "children": children,
+        }
+        if config.authentication_type == AuthenticationTypeEnum.DIGEST:
+            relation_data.update(
+                {
+                    "realm": config.realm,
+                    "nonce_garbage_interval": f"{config.nonce_garbage_interval} minutes",
+                    "nonce_max_duration": f"{config.nonce_max_duration} minutes",
+                    "nonce_max_count": config.nonce_max_count,
+                }
+            )
+
+        return [relation_data]
 
 
 if __name__ == "__main__":  # pragma: nocover

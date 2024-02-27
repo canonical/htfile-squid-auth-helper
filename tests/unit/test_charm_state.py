@@ -13,11 +13,10 @@ from unittest.mock import MagicMock
 
 import pytest
 from ops import CharmBase
-from passlib.apache import HtdigestFile, HtpasswdFile
 from unit.constants import DEFAULT_REALM, VAULT_FILENAME, VAULT_FILEPATH
 
 import charm_state
-from charm_state import VAULT_FILE_MISSING, AuthenticationTypeEnum, CharmState, SquidAuthConfig
+from charm_state import AuthenticationTypeEnum, CharmState
 from exceptions import CharmConfigInvalidError, SquidPathNotFoundError
 
 
@@ -161,50 +160,3 @@ def test_charm_state_from_charm_no_squid_folder(mocked_charm: CharmBase) -> None
         CharmState.from_charm(mocked_charm)
 
     assert exc.value.msg == "Squid tools path can't be found"
-
-
-def test_charm_state_get_digest(vault_file: Path) -> None:
-    """
-    arrange: A charmstate with default authentication_type (digest).
-    act: Get the vault from get_auth_vault method.
-    assert: The vault should be an instance of HtdigestFile.
-    """
-    vault_file.parent.mkdir(parents=True, exist_ok=True)
-    vault_file.touch()
-
-    squid_auth_config = SquidAuthConfig(realm=DEFAULT_REALM, vault_filepath=vault_file)
-    test_charm_state = CharmState(squid_auth_config=squid_auth_config, squid_tools_path="/abc")
-    vault = test_charm_state.get_auth_vault()
-
-    assert isinstance(vault, HtdigestFile)
-
-
-def test_charm_state_get_basic(vault_file: Path) -> None:
-    """
-    arrange: A charmstate with basic as authentication_type.
-    act: Get the vault from get_auth_vault method.
-    assert: The vault should be an instance of HtpasswdFile.
-    """
-    vault_file.parent.mkdir(parents=True, exist_ok=True)
-    vault_file.touch()
-
-    squid_auth_config = SquidAuthConfig(vault_filepath=vault_file, authentication_type="basic")
-    test_charm_state = CharmState(squid_auth_config=squid_auth_config, squid_tools_path="/abc")
-    vault = test_charm_state.get_auth_vault()
-
-    assert isinstance(vault, HtpasswdFile)
-
-
-def test_charm_state_get_vault_no_file() -> None:
-    """
-    arrange: A charmstate with default authentication_type (digest) but missing vault file.
-    act: Get the vault from get_auth_vault method.
-    assert: The expected exception should be raised with the expected message.
-    """
-    squid_auth_config = SquidAuthConfig(realm=DEFAULT_REALM, vault_filepath="/abc")
-    test_charm_state = CharmState(squid_auth_config=squid_auth_config, squid_tools_path="/abc")
-
-    with pytest.raises(SquidPathNotFoundError) as exc:
-        test_charm_state.get_auth_vault()
-
-    assert VAULT_FILE_MISSING == exc.value.msg

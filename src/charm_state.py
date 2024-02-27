@@ -7,15 +7,11 @@ import dataclasses
 import itertools
 from enum import Enum
 from pathlib import Path
-from typing import Any
 
 from ops import CharmBase
-from passlib.apache import HtdigestFile, HtpasswdFile
 from pydantic import BaseModel, ValidationError
 
 from exceptions import CharmConfigInvalidError, SquidPathNotFoundError
-
-VAULT_FILE_MISSING = "Vault file is missing, something probably went wrong during install."
 
 SQUID_TOOLS_PATH = Path("/usr/lib/squid")
 SQUID3_TOOLS_PATH = Path("/usr/lib/squid3")
@@ -85,6 +81,7 @@ class CharmState:
 
         Raises:
             CharmConfigInvalidError: For any validation error in the charm config data.
+            SquidPathNotFoundError: If none of the squid tools path exists.
         """
         try:
             # Ignores type error because of the dictionary
@@ -96,7 +93,10 @@ class CharmState:
             error_field_str = " ".join(f"{f}" for f in error_fields)
             raise CharmConfigInvalidError(f"invalid configuration: {error_field_str}") from exc
 
-        squid_tools_path = _get_squid_tools_path()
+        if not SQUID_TOOLS_PATH.exists() and not SQUID3_TOOLS_PATH.exists():
+            raise SquidPathNotFoundError("Squid tools path can't be found")
+
+        squid_tools_path = SQUID_TOOLS_PATH if SQUID_TOOLS_PATH.exists() else SQUID3_TOOLS_PATH
 
         if (
             not validated_charm_config.realm
@@ -118,52 +118,7 @@ class CharmState:
         """
         return self.squid_auth_config.vault_filepath.exists()
 
-    def get_auth_vault(self) -> HtdigestFile | HtpasswdFile:
-        """Load the vault file in an HtdigestFile or HtpasswdFile instance.
-
-        Returns: An instance of HtdigestFile or HtpasswdFile.
-
-        Raises:
-            SquidPathNotFoundError: If the digest file is missing.
-        """
-        if not self.vault_file_exists():
-            raise SquidPathNotFoundError(VAULT_FILE_MISSING)
-
-        return (
-            HtdigestFile(
-                self.squid_auth_config.vault_filepath, default_realm=self.squid_auth_config.realm
-            )
-            if self.squid_auth_config.authentication_type == AuthenticationTypeEnum.DIGEST
-            else HtpasswdFile(self.squid_auth_config.vault_filepath, "sha256_crypt")
-        )
-
-    def get_as_relation_data(self) -> list[dict[str, Any]]:
-        """Format the CharmState data as a dictionary for relation data.
-
-        Returns: A dictionary with CharmState data.
-        """
-        config = self.squid_auth_config
-        children = (
-            f"{config.children_max} startup={config.children_startup} idle={config.children_idle}"
-        )
-        relation_data: dict[str, str | int] = {
-            "scheme": config.authentication_type.value,
-            "program": self._get_squid_authentication_program(),
-            "children": children,
-        }
-        if config.authentication_type == AuthenticationTypeEnum.DIGEST:
-            relation_data.update(
-                {
-                    "realm": config.realm,
-                    "nonce_garbage_interval": f"{config.nonce_garbage_interval} minutes",
-                    "nonce_max_duration": f"{config.nonce_max_duration} minutes",
-                    "nonce_max_count": config.nonce_max_count,
-                }
-            )
-
-        return [relation_data]
-
-    def _get_squid_authentication_program(self) -> str:
+    def get_squid_authentication_program(self) -> str:
         """Build the program parameter for Squid configuration.
 
         Returns: The excepted command line depending on the authentication_type
@@ -174,17 +129,3 @@ class CharmState:
             if self.squid_auth_config.authentication_type == AuthenticationTypeEnum.DIGEST
             else f"{program}{SQUID_BASIC_AUTH_PROGRAM} {self.squid_auth_config.vault_filepath}"
         )
-
-
-def _get_squid_tools_path() -> Path:
-    """Define config and tools folders of squid.
-
-    Returns: A validated path for Squid tools.
-
-    Raises:
-        SquidPathNotFoundError: If the tools folder can't be found.
-    """
-    if not SQUID_TOOLS_PATH.exists() and not SQUID3_TOOLS_PATH.exists():
-        raise SquidPathNotFoundError("Squid tools path can't be found")
-
-    return SQUID_TOOLS_PATH if SQUID_TOOLS_PATH.exists() else SQUID3_TOOLS_PATH

@@ -181,7 +181,7 @@ def test_auth_helper_no_more_relation(digest_charm: Harness) -> None:
     assert charm.STATUS_BLOCKED_RELATION_MISSING_MESSAGE in str(digest_charm.model.unit.status)
 
     # Vault file is emptied
-    vault = CharmState.from_charm(digest_charm.charm).get_auth_vault()
+    vault = digest_charm.charm._get_auth_vault(CharmState.from_charm(digest_charm.charm))
     assert vault
     assert not vault.users()
 
@@ -212,7 +212,7 @@ def test_auth_helper_more_than_one_relation(digest_charm: Harness) -> None:
 
     assert isinstance(digest_charm.model.unit.status, ops.ActiveStatus)
     # Vault file is kept
-    vault = CharmState.from_charm(digest_charm.charm).get_auth_vault()
+    vault = digest_charm.charm._get_auth_vault(CharmState.from_charm(digest_charm.charm))
     assert vault
     assert vault.users()
 
@@ -232,7 +232,7 @@ def test_auth_helper_authentication_type_changed(digest_charm: Harness) -> None:
     digest_charm.update_config({"authentication_type": "basic"})
 
     # Vault file is emptied
-    vault = CharmState.from_charm(digest_charm.charm).get_auth_vault()
+    vault = digest_charm.charm._get_auth_vault(CharmState.from_charm(digest_charm.charm))
     assert vault
     assert not vault.users()
 
@@ -425,7 +425,7 @@ def test_create_user_set_password_fails(
     """
     mock_set_password = unittest.mock.MagicMock()
     mock_set_password.return_value = True
-    monkeypatch.setattr(charm_state.HtdigestFile, "set_password", mock_set_password)
+    monkeypatch.setattr(charm.HtdigestFile, "set_password", mock_set_password)
 
     event = unittest.mock.MagicMock(spec=ops.ActionEvent)
     event.params = {"username": USER}
@@ -476,7 +476,7 @@ def test_create_user_no_vault_file(digest_charm: Harness) -> None:
     with pytest.raises(SquidPathNotFoundError) as exc:
         digest_charm.charm._on_create_user(event)
 
-    assert charm_state.VAULT_FILE_MISSING in str(exc.value.msg)
+    assert charm.VAULT_FILE_MISSING in str(exc.value.msg)
 
 
 @pytest.mark.usefixtures("tools_directory")
@@ -542,7 +542,7 @@ def test_remove_user_no_vault_file(digest_charm: Harness) -> None:
     with pytest.raises(SquidPathNotFoundError) as exc:
         digest_charm.charm._on_remove_user(event)
 
-    assert charm_state.VAULT_FILE_MISSING in str(exc.value.msg)
+    assert charm.VAULT_FILE_MISSING in str(exc.value.msg)
 
 
 @pytest.mark.usefixtures("tools_directory")
@@ -582,4 +582,44 @@ def test_list_users_no_vault_file(digest_charm: Harness) -> None:
     with pytest.raises(SquidPathNotFoundError) as exc:
         digest_charm.charm._on_list_users(event)
 
-    assert charm_state.VAULT_FILE_MISSING in str(exc.value.msg)
+    assert charm.VAULT_FILE_MISSING in str(exc.value.msg)
+
+
+@pytest.mark.usefixtures("tools_directory")
+def test_charm_state_get_digest(digest_charm: Harness) -> None:
+    """
+    arrange: A charmstate with default authentication_type (digest).
+    act: Get the vault from get_auth_vault method.
+    assert: The vault should be an instance of HtdigestFile.
+    """
+    vault = digest_charm.charm._get_auth_vault(CharmState.from_charm(digest_charm.charm))
+
+    assert isinstance(vault, HtdigestFile)
+
+
+@pytest.mark.usefixtures("tools_directory")
+def test_charm_state_get_basic(basic_charm: Harness) -> None:
+    """
+    arrange: A charmstate with basic as authentication_type.
+    act: Get the vault from get_auth_vault method.
+    assert: The vault should be an instance of HtpasswdFile.
+    """
+    vault = basic_charm.charm._get_auth_vault(CharmState.from_charm(basic_charm.charm))
+
+    assert isinstance(vault, HtpasswdFile)
+
+
+@pytest.mark.usefixtures("tools_directory")
+def test_charm_state_get_vault_no_file(digest_charm: Harness) -> None:
+    """
+    arrange: A charmstate with default authentication_type (digest) but missing vault file.
+    act: Get the vault from get_auth_vault method.
+    assert: The expected exception should be raised with the expected message.
+    """
+    charm_state = CharmState.from_charm(digest_charm.charm)
+    vault_file = charm_state.squid_auth_config.vault_filepath
+    vault_file.unlink()
+    with pytest.raises(SquidPathNotFoundError) as exc:
+        digest_charm.charm._get_auth_vault(charm_state)
+
+    assert charm.VAULT_FILE_MISSING == exc.value.msg
