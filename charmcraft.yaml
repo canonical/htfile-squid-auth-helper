@@ -17,3 +17,8 @@ bases:
 parts:
   charm:
     charm-binary-python-packages: [pydantic]
+    override-build: |-
+      rustup default stable
+      craftctl default
+    build-snaps:
+      - rustup
