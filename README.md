@@ -6,25 +6,26 @@
 
 ## Description
 
-TODO
+A [Juju](https://juju.is/) subordinate [charm](https://juju.is/docs/olm/charmed-operators) for
+the [Squid Reverseproxy charm](https://charmhub.io/squid-reverseproxy) that allows
+authentication digest or basic authentication using squid-auth-helper relation.
 
-## Usage
+As a subordinate charm this charm requires the [Squid Reverseproxy charm](https://charmhub.io/squid-reverseproxy)
+to be deployed and integrated with it.
 
-TODO
+The charm brings digest or basic authentication support to the Squid Reverseproxy using the `squd-auth-helper` charm relation.
+It allows you to manage user credentials through charm actions (create-user, remove-user, list-users), and configure authentication
+parameters using charm configuration
 
-## Development
+## Project and community
 
-TODO
+The Chrony Operator is a member of the Ubuntu family. It's an
+open source project that warmly welcomes community projects, contributions,
+suggestions, fixes and constructive feedback.
+* [Code of conduct](https://ubuntu.com/community/code-of-conduct)
+* [Get support](https://discourse.charmhub.io/)
+* [Join our online chat](https://chat.charmhub.io/charmhub/channels/charm-dev)
+* [Contribute](https://charmhub.io/chrony/docs/contributing)
+* [Roadmap](https://charmhub.io/chrony/docs/roadmap)
+Thinking about using the Chrony charm for your next project? [Get in touch](https://chat.charmhub.io/charmhub/channels/charm-dev)!
 
-## Testing
-
-TODO
-
-## Generating src docs for every commit
-
-Run the following command:
-
-```bash
-echo -e "tox -e src-docs\ngit add src-docs\n" >> .git/hooks/pre-commit
-chmod +x .git/hooks/pre-commit
-```
