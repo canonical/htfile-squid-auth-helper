@@ -86,7 +86,7 @@ def test_charm_state_from_charm_basic() -> None:
     ],
 )
 @pytest.mark.usefixtures("tools_directory")
-# pylint:disable=too-many-arguments
+# pylint:disable=too-many-arguments,too-many-positional-arguments
 def test_charm_state_from_charm_missing_filepath(
     nonce_garbage_interval: int,
     nonce_max_count: int,
