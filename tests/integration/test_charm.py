@@ -27,6 +27,8 @@ async def test_build_and_deploy(ops_test: OpsTest, pytestconfig: pytest.Config):
     """
     # Deploy the charm and wait for active/idle status
     charm = pytestconfig.getoption("--charm-file")
+    if not charm:
+        charm = await ops_test.build_charm(".")
 
     assert ops_test.model
     await asyncio.gather(
