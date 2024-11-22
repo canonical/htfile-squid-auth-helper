@@ -19,13 +19,13 @@ parameters using charm configuration
 
 ## Project and community
 
-The Chrony Operator is a member of the Ubuntu family. It's an
+The squid-auth-local subordinate charm is a member of the Ubuntu family. It's an
 open source project that warmly welcomes community projects, contributions,
 suggestions, fixes and constructive feedback.
 * [Code of conduct](https://ubuntu.com/community/code-of-conduct)
 * [Get support](https://discourse.charmhub.io/)
-* [Join our online chat](https://chat.charmhub.io/charmhub/channels/charm-dev)
-* [Contribute](https://charmhub.io/chrony/docs/contributing)
-* [Roadmap](https://charmhub.io/chrony/docs/roadmap)
-Thinking about using the Chrony charm for your next project? [Get in touch](https://chat.charmhub.io/charmhub/channels/charm-dev)!
+* [Join our online chat](https://chat.charmhub.io/squid-auth-local/channels/charm-dev)
+* [Contribute](https://charmhub.io/squid-auth-local/docs/contributing)
+* [Roadmap](https://charmhub.io/squid-auth-local/docs/roadmap)
+Thinking about using the squid-auth-local charm for your next project? [Get in touch](https://chat.charmhub.io/charmhub/channels/charm-dev)!
 
