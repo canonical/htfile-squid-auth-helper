@@ -27,5 +27,4 @@ suggestions, fixes and constructive feedback.
 * [Join our online chat](https://chat.charmhub.io/squid-auth-local/channels/charm-dev)
 * [Contribute](https://charmhub.io/squid-auth-local/docs/contributing)
 * [Roadmap](https://charmhub.io/squid-auth-local/docs/roadmap)
-Thinking about using the squid-auth-local charm for your next project? [Get in touch](https://chat.charmhub.io/charmhub/channels/charm-dev)!
-
+Thinking about using the squid-auth-local charm for your next project? [Get in touch](https://matrix.to/#/#charmhub-charmdev:ubuntu.com)!
