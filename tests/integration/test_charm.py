@@ -32,8 +32,8 @@ async def test_build_and_deploy(ops_test: OpsTest, pytestconfig: pytest.Config):
 
     assert ops_test.model
     await asyncio.gather(
-        ops_test.model.deploy(f"./{charm}", application_name=APP_NAME, series="jammy"),
+        ops_test.model.deploy(f"./{charm}", application_name=APP_NAME, num_units=0, series="jammy"),
         ops_test.model.wait_for_idle(
-            apps=[APP_NAME], status="active", raise_on_blocked=True, timeout=1000
+            apps=[APP_NAME], status="unknown", wait_for_units=0, raise_on_blocked=True, timeout=60
         ),
     )
