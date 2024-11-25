@@ -9,5 +9,7 @@ jobs:
     secrets: inherit
     with:
       load-test-enabled: false
+      trivy-fs-enabled: true
+      trivy-image-config: "trivy.yaml"
       zap-enabled: false
       provider: lxd
