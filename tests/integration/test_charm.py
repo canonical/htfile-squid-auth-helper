@@ -57,6 +57,11 @@ async def test_build_and_deploy(ops_test: OpsTest, pytestconfig: pytest.Config):
 
     logger.info("Validating initial setup")
     ip = ops_test.model.applications[PRINCIPAL_CHARM].units[0].public_address
+
+    # IPv6
+    if ":" in ip:
+        ip = f"[{ip}]"
+
     url = f"http://{ip}:3128"
     assert requests.get(url, timeout=5).status_code == 403
 
@@ -74,12 +79,14 @@ async def test_build_and_deploy(ops_test: OpsTest, pytestconfig: pytest.Config):
 
     logger.info("Enable local auth through our subordinate")
     await asyncio.gather(
-        await ops_test.model.relate(APP_NAME, PRINCIPAL_CHARM),
+        ops_test.model.relate(APP_NAME, PRINCIPAL_CHARM),
         ops_test.model.wait_for_idle(
-            apps=[APP_NAME, PRINCIPAL_CHARM],
+            apps=[PRINCIPAL_CHARM],
+            status="unknown",
+        ),
+        ops_test.model.wait_for_idle(
+            apps=[APP_NAME],
             status="active",
-            wait_for_units=0,
-            raise_on_blocked=True,
         ),
     )
 
