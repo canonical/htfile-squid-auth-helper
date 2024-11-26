@@ -15,7 +15,8 @@ options:
     type: int
     default: 0
     description: |
-      Initial amount of child process to manage  authentication created at startup.
+      Initial amount of child process to manage authentication created at startup.
+      If 0, first one will be created on demand.
   children-idle:
     type: int
     default: 1
