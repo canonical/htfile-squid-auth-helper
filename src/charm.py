@@ -80,7 +80,7 @@ class HtfileSquidAuthHelperCharm(ops.CharmBase):
         if not self._is_related_to_squid():
             vault_filepath = charm_state.squid_auth_config.vault_filepath
             vault_filepath.unlink()
-            vault_filepath.touch(0o644, exist_ok=True)
+            vault_filepath.touch(0o600, exist_ok=True)
 
         self.unit.status = status
 
@@ -91,8 +91,8 @@ class HtfileSquidAuthHelperCharm(ops.CharmBase):
 
         vault_filepath = charm_state.squid_auth_config.vault_filepath
         vault_filepath.parent.mkdir(parents=True, exist_ok=True)
-        vault_filepath.parent.chmod(0o755)
-        vault_filepath.touch(0o644, exist_ok=True)
+        vault_filepath.parent.chmod(0o700)
+        vault_filepath.touch(0o600, exist_ok=True)
 
         self.unit.status = self._compute_charm_status()
 
@@ -112,7 +112,7 @@ class HtfileSquidAuthHelperCharm(ops.CharmBase):
         except ValueError:
             vault_filepath = charm_state.squid_auth_config.vault_filepath
             vault_filepath.unlink()
-            vault_filepath.touch(0o644)
+            vault_filepath.touch(0o600)
 
         for relation in relations:
             relation.data[self.unit]["auth-params"] = json.dumps(
