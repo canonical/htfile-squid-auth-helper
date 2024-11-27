@@ -12,11 +12,8 @@ from pathlib import Path
 
 import pycurl
 import pytest
-import requests
-import time
 import yaml
 from pytest_operator.plugin import OpsTest
-
 
 logger = logging.getLogger(__name__)
 
@@ -24,16 +21,15 @@ METADATA = yaml.safe_load(Path("./metadata.yaml").read_text(encoding="utf-8"))
 APP_NAME = METADATA["name"]
 SQUID_CHARM = "squid-reverseproxy"
 
-PUBLIC_WEBSITE = "canonical.com"
+FQDN = "canonical.com"
 
 
 def proxified_request_status(
     ops_test: OpsTest,
     protocol: str,
     fqdn: str,
-    user: str = "",
-    password: str = "",
-    auth_type: str = None,
+    credentials: str = "",
+    auth_type: str = "",
 ) -> int:
     """Retrieve a test URL through Squid proxy.
 
@@ -43,8 +39,7 @@ def proxified_request_status(
         ops_test: the current model
         protocol: http or https
         fqdn: the website fqdn
-        user: username to use for authenticated request
-        password: password to use for authenticated request
+        credentials: 'username:password' to use for authenticated request
         auth_type: basic or digest
 
     Returns:
@@ -56,16 +51,7 @@ def proxified_request_status(
 
     curl = pycurl.Curl()
 
-    curl.setopt(pycurl.WRITEFUNCTION, lambda x: None)  # Hide page content
-
-    curl.setopt(pycurl.FAILONERROR, False)  # To be able to catch 407
-    # True
-    # FAILED tests/integration/test_charm.py::test_authenticated_requests[True-basic-https] - AssertionError: assert 0 in [407]
-    # FAILED tests/integration/test_charm.py::test_authenticated_requests[True-digest-https] - AssertionError: assert 0 in [407]
-    # False
-    # FAILED tests/integration/test_charm.py::test_authenticated_requests[True-basic-https] - AssertionError: assert 0 in [407]
-    # FAILED tests/integration/test_charm.py::test_authenticated_requests[True-digest-https] - AssertionError: assert 0 in [407]
-    # ERROR    integration.test_charm:test_charm.py:83 Curl error: (56, 'Received HTTP code 407 from proxy after CONNECT') 0 0
+    curl.setopt(pycurl.WRITEFUNCTION, lambda x: None)  # Hide page content from tests output
 
     curl.setopt(pycurl.URL, target_url)
     curl.setopt(pycurl.PROXY, squid_url)
@@ -76,8 +62,8 @@ def proxified_request_status(
     elif auth_type == "digest":
         curl.setopt(pycurl.PROXYAUTH, pycurl.HTTPAUTH_DIGEST)
 
-    if user:
-        curl.setopt(pycurl.PROXYUSERPWD, f"{user}:{password}")
+    if credentials:
+        curl.setopt(pycurl.PROXYUSERPWD, credentials)
 
     curl.setopt(pycurl.SSL_VERIFYPEER, False)
 
@@ -93,8 +79,7 @@ def proxified_request_status(
 @pytest.mark.abort_on_fail
 @pytest.mark.skip_if_deployed
 async def test_build_and_deploy(ops_test: OpsTest, pytestconfig: pytest.Config):
-    """Deploy the charm alone."""
-    # Deploy the charm and wait for active/idle status
+    """Deploy the charm alone, and wait for 'unknown' status."""
     charm = pytestconfig.getoption("--charm-file")
     if not charm:
         charm = await ops_test.build_charm(".")
@@ -113,28 +98,31 @@ async def test_build_and_deploy(ops_test: OpsTest, pytestconfig: pytest.Config):
 
 @pytest.mark.abort_on_fail
 @pytest.mark.skip_if_deployed
-async def test_default_squid_setup(ops_test: OpsTest):
-    """Check testing environment. Deploy Squid and check that we can access public websites."""
+async def test_deploy_squid(ops_test: OpsTest):
+    """Check testing environment.
+    Deploy Squid and check that it waits for an auth helper.
+    """
     await asyncio.gather(
         ops_test.model.deploy(
             SQUID_CHARM,
             application_name=SQUID_CHARM,
             series="jammy",
             config={
-                "wait_for_auth_helper": False,
+                "wait_for_auth_helper": True,
                 "port_options": "",
-                "auth_list": "[{'src': ['127.0.0.1']}]",
+                "auth_list": '- "proxy_auth": [REQUIRED]',
             },
         ),
         ops_test.model.wait_for_idle(apps=[SQUID_CHARM], status="unknown", raise_on_blocked=True),
     )
-    time.sleep(2)
-    assert proxified_request_status(ops_test, "http", PUBLIC_WEBSITE) in [200, 301]
+
+    open_ports = ops_test.model.applications[APP_NAME].units[0].ssh("ss -ntl")
+    assert ":3128" not in open_ports
 
 
 @pytest.mark.skip_if_deployed
 async def test_relation(ops_test: OpsTest, pytestconfig: pytest.Config):
-    """Define an ACL requiring authentication and ensure anonymous users are blocked."""
+    """Integrate the auth helper and sure Squid has started with authentication required."""
     await asyncio.gather(
         ops_test.model.relate(APP_NAME, SQUID_CHARM),
         ops_test.model.wait_for_idle(
@@ -147,16 +135,7 @@ async def test_relation(ops_test: OpsTest, pytestconfig: pytest.Config):
         ),
     )
 
-    await asyncio.gather(
-        ops_test.model.applications[SQUID_CHARM].set_config(
-            {"auth_list": '- "proxy_auth": [REQUIRED]'}
-        ),
-        ops_test.model.wait_for_idle(apps=[SQUID_CHARM], status="unknown", raise_on_blocked=True),
-    )
-
-    assert (
-        proxified_request_status(ops_test, "http", PUBLIC_WEBSITE) == 407
-    )  #  Proxy Authentication Required
+    assert proxified_request_status(ops_test, "http", FQDN) == 407  # Proxy Authentication Required
 
 
 @pytest.mark.parametrize("protocol", ["http", "https"])
@@ -166,8 +145,9 @@ async def test_authenticated_requests(
     auth_type: str,
     protocol: str,
 ):
-    """Config Basic auth.
-    Check that authenticated users have access, and that non authenticated don't.
+    """Check that authenticated users have access.
+
+    Test Basic and Digest protocols for http and https websites.
     """
     await asyncio.gather(
         ops_test.model.applications[APP_NAME].set_config({"authentication-type": auth_type}),
@@ -187,7 +167,7 @@ async def test_authenticated_requests(
     assert password
 
     assert proxified_request_status(
-        ops_test, protocol, PUBLIC_WEBSITE, user, password, auth_type=auth_type
+        ops_test, protocol, FQDN, f"{user}:{password}", auth_type=auth_type
     ) in [200, 301]
 
 
@@ -196,9 +176,7 @@ async def test_unauthenticated_requests(
     ops_test: OpsTest,
     auth_type: str,
 ):
-    """Config Basic auth.
-    Check that authenticated users have access, and that non authenticated don't.
-    """
+    """Check that unauthenticated users cannot access."""
     await asyncio.gather(
         ops_test.model.applications[APP_NAME].set_config({"authentication-type": auth_type}),
         ops_test.model.wait_for_idle(apps=[APP_NAME], status="active", raise_on_blocked=True),
@@ -216,16 +194,8 @@ async def test_unauthenticated_requests(
     password = action.results["password"]
     assert password
 
-    assert (
-        proxified_request_status(
-            ops_test, "http", PUBLIC_WEBSITE, user, "badpassword", auth_type=auth_type
-        )
-        == 407
-    )
+    creds = f"{user}:badpass"
+    assert proxified_request_status(ops_test, "http", FQDN, creds, auth_type=auth_type) == 407
 
-    assert (
-        proxified_request_status(
-            ops_test, "http", PUBLIC_WEBSITE, "baduser", password, auth_type=auth_type
-        )
-        == 407
-    )
+    creds = f"baduser:{password}"
+    assert proxified_request_status(ops_test, "http", FQDN, creds, auth_type=auth_type) == 407
