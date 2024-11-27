@@ -115,8 +115,7 @@ async def test_deploy_squid(ops_test: OpsTest):
         ),
         ops_test.model.wait_for_idle(apps=[SQUID_CHARM], status="unknown", raise_on_blocked=True),
     )
-
-    open_ports = ops_test.model.applications[APP_NAME].units[0].ssh("ss -ntl")
+    open_ports = await ops_test.model.applications[SQUID_CHARM].units[0].ssh("ss -ntl")
     assert ":3128" not in open_ports
 
 
