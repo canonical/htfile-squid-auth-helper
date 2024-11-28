@@ -84,7 +84,7 @@ class HtfileSquidAuthHelperCharm(ops.CharmBase):
         if not self._is_related_to_squid():
             vault_filepath = charm_state.squid_auth_config.vault_filepath
             vault_filepath.unlink()
-            vault_filepath.touch(0o600, exist_ok=True)
+            self._create_auth_vault(charm_state)
 
         self.unit.status = status
 
@@ -96,11 +96,7 @@ class HtfileSquidAuthHelperCharm(ops.CharmBase):
         vault_filepath = charm_state.squid_auth_config.vault_filepath
         vault_filepath.parent.mkdir(parents=True, exist_ok=True)
         vault_filepath.parent.chmod(0o700)
-        vault_filepath.touch(0o600, exist_ok=True)
-        # Checked in integration tests
-        if os.geteuid() == 0:
-            shutil.chown(vault_filepath, user=SQUID_USER)
-            shutil.chown(vault_filepath.parent, user=SQUID_USER)
+        self._create_auth_vault(charm_state)
 
         self.unit.status = self._compute_charm_status()
 
@@ -120,7 +116,7 @@ class HtfileSquidAuthHelperCharm(ops.CharmBase):
         except ValueError:
             vault_filepath = charm_state.squid_auth_config.vault_filepath
             vault_filepath.unlink()
-            vault_filepath.touch(0o600)
+            self._create_auth_vault(charm_state)
 
         for relation in relations:
             relation.data[self.unit]["auth-params"] = json.dumps(
@@ -241,6 +237,19 @@ class HtfileSquidAuthHelperCharm(ops.CharmBase):
         if not self._is_related_to_squid():
             return ops.BlockedStatus(STATUS_BLOCKED_RELATION_MISSING_MESSAGE)
         return ops.ActiveStatus()
+
+    def _create_auth_vault(self, charm_state: CharmState) -> None:
+        """Create the vault with the right ownership and permissions.
+
+        Args:
+            charm_state: The CharmState object
+        """
+        vault_filepath = charm_state.squid_auth_config.vault_filepath
+        vault_filepath.touch(0o600, exist_ok=True)
+        # Checked in integration tests
+        if os.geteuid() == 0:
+            shutil.chown(vault_filepath, user=SQUID_USER)
+            shutil.chown(vault_filepath.parent, user=SQUID_USER)
 
     def _get_auth_vault(self, charm_state: CharmState) -> HtdigestFile | HtpasswdFile:
         """Load the vault file in an HtdigestFile or HtpasswdFile instance.
