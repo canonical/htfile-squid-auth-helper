@@ -8,6 +8,7 @@ jobs:
     uses: canonical/operator-workflows/.github/workflows/integration_test.yaml@main
     secrets: inherit
     with:
+      tmate-debug: true
       load-test-enabled: false
       trivy-fs-enabled: true
       trivy-image-config: "trivy.yaml"
