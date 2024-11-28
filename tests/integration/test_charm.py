@@ -84,7 +84,11 @@ async def test_build_and_deploy(ops_test: OpsTest, pytestconfig: pytest.Config):
             f"./{charm}", application_name=APP_NAME, num_units=0, series="jammy"
         ),
         ops_test.model.wait_for_idle(
-            apps=[APP_NAME], status="unknown", wait_for_units=0, raise_on_blocked=True, timeout=60
+            apps=[APP_NAME],
+            status="unknown",
+            wait_for_exact_units=0,
+            raise_on_blocked=True,
+            timeout=60,
         ),
     )
 
@@ -125,7 +129,7 @@ async def test_deploy_squid_and_client(ops_test: OpsTest):
 
 
 @pytest.mark.skip_if_deployed
-async def test_relation(ops_test: OpsTest, pytestconfig: pytest.Config):
+async def test_relation(ops_test: OpsTest):
     """Integrate the auth helper and sure Squid has started with authentication required."""
     assert ops_test.model
 
