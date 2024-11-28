@@ -9,6 +9,7 @@
 
 import json
 from typing import Any
+import shutil
 
 import ops
 from passlib import pwd
@@ -28,6 +29,8 @@ STATUS_BLOCKED_RELATION_MISSING_MESSAGE = (
     "Waiting for integration with Squid Reverseproxy charm..."
 )
 VAULT_FILE_MISSING = "Vault file is missing, something probably went wrong during install."
+
+SQUID_USER = "proxy"
 
 
 class HtfileSquidAuthHelperCharm(ops.CharmBase):
@@ -93,6 +96,8 @@ class HtfileSquidAuthHelperCharm(ops.CharmBase):
         vault_filepath.parent.mkdir(parents=True, exist_ok=True)
         vault_filepath.parent.chmod(0o700)
         vault_filepath.touch(0o600, exist_ok=True)
+        shutil.chown(vault_filepath, user=SQUID_PROXY)
+        shutil.chown(vault_filepath.parent, user=SQUID_PROXY)
 
         self.unit.status = self._compute_charm_status()
 
