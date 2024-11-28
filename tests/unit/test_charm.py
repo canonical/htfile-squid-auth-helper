@@ -237,31 +237,6 @@ def test_auth_helper_authentication_type_changed(digest_charm: Harness) -> None:
     assert not vault.users()
 
 
-def test_auth_helper_squid3_folder(
-    monkeypatch: pytest.MonkeyPatch, vault_file: Path, tmp_path: Path
-) -> None:
-    """
-    arrange: A temporary folder for squid3 foldere, and non existing for squid.
-    act: Start the charm.
-    assert: The unit should be in the expected state.
-    """
-    squid3_tools_path = Path(str(tmp_path), "tools", "squid3")
-    squid3_tools_path.mkdir(parents=True)
-
-    monkeypatch.setattr(charm_state, "SQUID_TOOLS_PATH", Path(str(tmp_path), "tools", "squid"))
-    monkeypatch.setattr(charm_state, "SQUID3_TOOLS_PATH", squid3_tools_path)
-
-    harness = Harness(charm.HtfileSquidAuthHelperCharm)
-    harness.set_leader(True)
-    harness.add_relation(charm.AUTH_HELPER_RELATION_NAME, "squid-reverseproxy")
-    harness.update_config({"vault-filepath": str(vault_file)})
-    harness.begin_with_initial_hooks()
-
-    assert isinstance(harness.model.unit.status, ops.ActiveStatus)
-
-    harness.cleanup()
-
-
 def test_auth_helper_no_squid_folder() -> None:
     """
     arrange: No squid folder created.

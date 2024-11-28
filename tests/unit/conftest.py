@@ -24,7 +24,6 @@ def tools_directory_fixture(
     squid_tools_path.mkdir(parents=True, exist_ok=True)
 
     monkeypatch.setattr(charm_state, "SQUID_TOOLS_PATH", squid_tools_path)
-    monkeypatch.setattr(charm_state, "SQUID3_TOOLS_PATH", Path(str(tmp_path), "tools", "squid3"))
 
     yield
 

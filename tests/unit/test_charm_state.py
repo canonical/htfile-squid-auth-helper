@@ -7,7 +7,6 @@
 """Unit tests."""
 
 
-from pathlib import Path
 from typing import Generator
 from unittest.mock import MagicMock
 
@@ -15,7 +14,6 @@ import pytest
 from ops import CharmBase
 from unit.constants import DEFAULT_REALM, VAULT_FILENAME, VAULT_FILEPATH
 
-import charm_state
 from charm_state import AuthenticationTypeEnum, CharmState
 from exceptions import CharmConfigInvalidError, SquidPathNotFoundError
 
@@ -129,25 +127,6 @@ def test_charm_state_from_charm_digest_missing_realm() -> None:
         CharmState.from_charm(charm)
 
     assert "realm configuration is mandatory for digest authentication." in exc.value.msg
-
-
-def test_charm_state_from_charm_squid3_folder(
-    monkeypatch: pytest.MonkeyPatch, mocked_charm: CharmBase, tmp_path: Path
-) -> None:
-    """
-    arrange: A mocked charm with an existing squid3 folder, but non existing squid folder.
-    act: Create the charmstate from the charm.
-    assert: The charmstate squid_tools_path attribute should have the expected value.
-    """
-    squid_tools_path = Path(str(tmp_path), "tools", "squid3")
-    squid_tools_path.mkdir(parents=True)
-
-    monkeypatch.setattr(charm_state, "SQUID_TOOLS_PATH", squid_tools_path)
-    monkeypatch.setattr(charm_state, "SQUID3_TOOLS_PATH", Path(str(tmp_path), "tools", "squid3"))
-
-    test_charm_state = CharmState.from_charm(mocked_charm)
-
-    assert test_charm_state.squid_tools_path == squid_tools_path
 
 
 def test_charm_state_from_charm_no_squid_folder(mocked_charm: CharmBase) -> None:

@@ -14,7 +14,6 @@ from pydantic import BaseModel, ValidationError
 from exceptions import CharmConfigInvalidError, SquidPathNotFoundError
 
 SQUID_TOOLS_PATH = Path("/usr/lib/squid")
-SQUID3_TOOLS_PATH = Path("/usr/lib/squid3")
 
 SQUID_DIGEST_AUTH_PROGRAM = "digest_file_auth"
 SQUID_BASIC_AUTH_PROGRAM = "basic_ncsa_auth"
@@ -98,10 +97,8 @@ class CharmState:
             error_field_str = " ".join(f"{f}" for f in error_fields)
             raise CharmConfigInvalidError(f"invalid configuration: {error_field_str}") from exc
 
-        if not SQUID_TOOLS_PATH.exists() and not SQUID3_TOOLS_PATH.exists():
+        if not SQUID_TOOLS_PATH.exists():
             raise SquidPathNotFoundError("Squid tools path can't be found")
-
-        squid_tools_path = SQUID_TOOLS_PATH if SQUID_TOOLS_PATH.exists() else SQUID3_TOOLS_PATH
 
         if (
             not validated_charm_config.realm
@@ -113,7 +110,7 @@ class CharmState:
 
         return cls(
             squid_auth_config=validated_charm_config,
-            squid_tools_path=squid_tools_path,
+            squid_tools_path=SQUID_TOOLS_PATH,
         )
 
     def vault_file_exists(self) -> bool:
