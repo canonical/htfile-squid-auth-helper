@@ -44,6 +44,8 @@ async def check_access(
     Returns:
         The HTTP status (not following redirects)
     """
+    assert ops_test.model
+
     squid_ip = ops_test.model.applications[SQUID_CHARM].units[0].public_address
     squid_url = f"http://{squid_ip}:3128"
 
@@ -95,6 +97,8 @@ async def test_deploy_squid_and_client(ops_test: OpsTest):
     Deploy Squid and check that it waits for an auth helper.
     Deploy a client unit to be able to test access later.
     """
+    assert ops_test.model
+
     await asyncio.gather(
         ops_test.model.deploy(
             SQUID_CHARM,
@@ -123,6 +127,8 @@ async def test_deploy_squid_and_client(ops_test: OpsTest):
 @pytest.mark.skip_if_deployed
 async def test_relation(ops_test: OpsTest, pytestconfig: pytest.Config):
     """Integrate the auth helper and sure Squid has started with authentication required."""
+    assert ops_test.model
+
     await asyncio.gather(
         ops_test.model.relate(APP_NAME, SQUID_CHARM),
         ops_test.model.wait_for_idle(
@@ -149,6 +155,8 @@ async def test_authenticated_requests(
 
     Test Basic and Digest protocols for http and https websites.
     """
+    assert ops_test.model
+
     await asyncio.gather(
         ops_test.model.applications[APP_NAME].set_config({"authentication-type": auth_type}),
         ops_test.model.wait_for_idle(apps=[APP_NAME], status="active", raise_on_blocked=True),
@@ -177,6 +185,8 @@ async def test_unauthenticated_requests(
     auth_type: str,
 ):
     """Check that unauthenticated users cannot access."""
+    assert ops_test.model
+
     await asyncio.gather(
         ops_test.model.applications[APP_NAME].set_config({"authentication-type": auth_type}),
         ops_test.model.wait_for_idle(apps=[APP_NAME], status="active", raise_on_blocked=True),
