@@ -152,7 +152,6 @@ async def test_relation(ops_test: OpsTest):
 
 
 @pytest.mark.abort_on_fail
-@pytest.mark.skip_if_deployed
 async def test_vault_ownership_and_permissions(ops_test: OpsTest):
     """Check vault ownership and permissions."""
     assert ops_test.model
