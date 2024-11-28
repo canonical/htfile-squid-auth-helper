@@ -10,7 +10,6 @@ import logging
 import uuid
 from pathlib import Path
 
-import pycurl
 import pytest
 import yaml
 from pytest_operator.plugin import OpsTest
@@ -19,21 +18,21 @@ logger = logging.getLogger(__name__)
 
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text(encoding="utf-8"))
 APP_NAME = METADATA["name"]
+CLIENT_NAME = "client"
+
 SQUID_CHARM = "squid-reverseproxy"
 
 FQDN = "canonical.com"
 
 
-def proxified_request_status(
+async def check_access(
     ops_test: OpsTest,
     protocol: str,
     fqdn: str,
     credentials: str = "",
     auth_type: str = "",
 ) -> int:
-    """Retrieve a test URL through Squid proxy.
-
-    Using pycurl as requests doesn't support Digest auth for proxies.
+    """Retrieve a test URL from a client through Squid proxy.
 
     Args:
         ops_test: the current model
@@ -45,35 +44,27 @@ def proxified_request_status(
     Returns:
         The HTTP status (not following redirects)
     """
-    ip = ops_test.model.applications[SQUID_CHARM].units[0].public_address
-    squid_url = f"http://{ip}:3128"
+    squid_ip = ops_test.model.applications[SQUID_CHARM].units[0].public_address
+    squid_url = f"http://{squid_ip}:3128"
+
     target_url = f"{protocol}://{fqdn}"
 
-    curl = pycurl.Curl()
-
-    curl.setopt(pycurl.WRITEFUNCTION, lambda x: None)  # Hide page content from tests output
-
-    curl.setopt(pycurl.URL, target_url)
-    curl.setopt(pycurl.PROXY, squid_url)
-    curl.setopt(pycurl.PROXYTYPE, pycurl.PROXYTYPE_HTTP)
-
+    auth_options = ""
     if auth_type == "basic":
-        curl.setopt(pycurl.PROXYAUTH, pycurl.HTTPAUTH_BASIC)
+        auth_options = "--proxy-basic"
     elif auth_type == "digest":
-        curl.setopt(pycurl.PROXYAUTH, pycurl.HTTPAUTH_DIGEST)
+        auth_options = "--proxy-digest"
 
     if credentials:
-        curl.setopt(pycurl.PROXYUSERPWD, credentials)
+        auth_options += f" --proxy-user {credentials}"
 
-    curl.setopt(pycurl.SSL_VERIFYPEER, False)
+    command = "curl -o /dev/null -s -w '%{http_code}' "  # Only returns status code
+    command += "--no-location --connect-timeout 2 --max-time 2 "  # Don't follow redirects
+    command += f"--proxy {squid_url} {auth_options} {target_url}"
 
-    curl.setopt(pycurl.TIMEOUT, 5)
-    try:
-        curl.perform()
-    except pycurl.error as e:
-        logger.error(f"Curl error: {e}")
+    res = await ops_test.model.applications[CLIENT_NAME].units[0].ssh(command)
 
-    return curl.getinfo(pycurl.RESPONSE_CODE)
+    return int(res)
 
 
 @pytest.mark.abort_on_fail
@@ -98,9 +89,11 @@ async def test_build_and_deploy(ops_test: OpsTest, pytestconfig: pytest.Config):
 
 @pytest.mark.abort_on_fail
 @pytest.mark.skip_if_deployed
-async def test_deploy_squid(ops_test: OpsTest):
+async def test_deploy_squid_and_client(ops_test: OpsTest):
     """Check testing environment.
+
     Deploy Squid and check that it waits for an auth helper.
+    Deploy a client unit to be able to test access later.
     """
     await asyncio.gather(
         ops_test.model.deploy(
@@ -114,8 +107,16 @@ async def test_deploy_squid(ops_test: OpsTest):
             },
         ),
         ops_test.model.wait_for_idle(apps=[SQUID_CHARM], status="unknown", raise_on_blocked=True),
+        ops_test.model.deploy(
+            "ubuntu",
+            application_name=CLIENT_NAME,
+            series="jammy",
+        ),
+        ops_test.model.wait_for_idle(apps=[CLIENT_NAME], status="active", raise_on_blocked=True),
     )
     open_ports = await ops_test.model.applications[SQUID_CHARM].units[0].ssh("ss -ntl")
+
+    # Ensure Squid is waiting for auth provider before starting
     assert ":3128" not in open_ports
 
 
@@ -134,7 +135,7 @@ async def test_relation(ops_test: OpsTest, pytestconfig: pytest.Config):
         ),
     )
 
-    assert proxified_request_status(ops_test, "http", FQDN) == 407  # Proxy Authentication Required
+    assert await check_access(ops_test, "http", FQDN) == 407  # Proxy Authentication Required
 
 
 @pytest.mark.parametrize("protocol", ["http", "https"])
@@ -165,7 +166,7 @@ async def test_authenticated_requests(
     password = action.results["password"]
     assert password
 
-    assert proxified_request_status(
+    assert await check_access(
         ops_test, protocol, FQDN, f"{user}:{password}", auth_type=auth_type
     ) in [200, 301]
 
@@ -194,7 +195,7 @@ async def test_unauthenticated_requests(
     assert password
 
     creds = f"{user}:badpass"
-    assert proxified_request_status(ops_test, "http", FQDN, creds, auth_type=auth_type) == 407
+    assert await check_access(ops_test, "http", FQDN, creds, auth_type=auth_type) == 407
 
     creds = f"baduser:{password}"
-    assert proxified_request_status(ops_test, "http", FQDN, creds, auth_type=auth_type) == 407
+    assert await check_access(ops_test, "http", FQDN, creds, auth_type=auth_type) == 407
