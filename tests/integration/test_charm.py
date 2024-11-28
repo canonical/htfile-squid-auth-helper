@@ -10,10 +10,12 @@ import logging
 import uuid
 from pathlib import Path
 
-import juju
 import pytest
 import yaml
 from pytest_operator.plugin import OpsTest
+
+from charm import SQUID_USER
+from tests.unit.constants import VAULT_FILENAME, VAULT_FILEPATH
 
 logger = logging.getLogger(__name__)
 
@@ -65,11 +67,7 @@ async def check_access(
     command += "--no-location --connect-timeout 2 --max-time 2 "  # Don't follow redirects
     command += f"--proxy {squid_url} {auth_options} {target_url}"
 
-    try:
-        res = await ops_test.model.applications[CLIENT_NAME].units[0].ssh(command)
-    except juju.errors.JujuError as e:
-        logger.error(f"Failed to execute command: {command}. Exception was: {e}")
-        raise RuntimeError("Could not execute curl command on client. See logs for details.")
+    res = await ops_test.model.applications[CLIENT_NAME].units[0].ssh(command)
 
     return int(res)
 
@@ -151,6 +149,27 @@ async def test_relation(ops_test: OpsTest):
     )
 
     assert await check_access(ops_test, "http", FQDN) == 407  # Proxy Authentication Required
+
+
+@pytest.mark.abort_on_fail
+@pytest.mark.skip_if_deployed
+async def test_vault_ownership_and_permissions(ops_test: OpsTest):
+    """Check vault ownership and permissions."""
+    assert ops_test.model
+
+    vault_perms = await (
+        ops_test.model.applications[SQUID_CHARM]
+        .units[0]
+        .ssh(f"sudo find /{VAULT_FILEPATH} -maxdepth 0 -printf '%u %g %m'")
+    )
+    assert vault_perms == f"{SQUID_USER} root 700"
+
+    vault_parent_perms = await (
+        ops_test.model.applications[SQUID_CHARM]
+        .units[0]
+        .ssh(f"sudo find /{VAULT_FILEPATH}/{VAULT_FILENAME} -printf '%u %g %m'")
+    )
+    assert vault_parent_perms == f"{SQUID_USER} root 600"
 
 
 @pytest.mark.parametrize("protocol", ["http", "https"])

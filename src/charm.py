@@ -8,8 +8,9 @@
 """A subordinate charm enabling support for digest authentication on Squid Reverseproxy charm."""
 
 import json
-from typing import Any
+import os
 import shutil
+from typing import Any
 
 import ops
 from passlib import pwd
@@ -96,8 +97,10 @@ class HtfileSquidAuthHelperCharm(ops.CharmBase):
         vault_filepath.parent.mkdir(parents=True, exist_ok=True)
         vault_filepath.parent.chmod(0o700)
         vault_filepath.touch(0o600, exist_ok=True)
-        shutil.chown(vault_filepath, user=SQUID_PROXY)
-        shutil.chown(vault_filepath.parent, user=SQUID_PROXY)
+        # Checked in integration tests
+        if os.geteuid() == 0:
+            shutil.chown(vault_filepath, user=SQUID_USER)
+            shutil.chown(vault_filepath.parent, user=SQUID_USER)
 
         self.unit.status = self._compute_charm_status()
 
