@@ -5,9 +5,13 @@ on:
 
 jobs:
   integration-tests:
+    strategy:
+      matrix:
+        juju-version: [ 3.1/stable, 3.6/stable ]
     uses: canonical/operator-workflows/.github/workflows/integration_test.yaml@main
     secrets: inherit
     with:
+      juju-channel: ${{ matrix.juju-version }}
       tmate-debug: true
       load-test-enabled: false
       trivy-fs-enabled: true
