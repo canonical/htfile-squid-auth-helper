@@ -10,6 +10,7 @@ import logging
 import uuid
 from pathlib import Path
 
+import juju
 import pytest
 import yaml
 from pytest_operator.plugin import OpsTest
@@ -64,7 +65,11 @@ async def check_access(
     command += "--no-location --connect-timeout 2 --max-time 2 "  # Don't follow redirects
     command += f"--proxy {squid_url} {auth_options} {target_url}"
 
-    res = await ops_test.model.applications[CLIENT_NAME].units[0].ssh(command)
+    try:
+        res = await ops_test.model.applications[CLIENT_NAME].units[0].ssh(command)
+    except juju.errors.JujuError as e:
+        logger.error(f"Failed to execute command: {command}. Exception was: {e}")
+        raise RuntimeError("Could not execute curl command on client. See logs for details.")
 
     return int(res)
 
