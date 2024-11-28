@@ -15,7 +15,10 @@ to be deployed and integrated with it.
 
 The charm brings digest or basic authentication support to the Squid Reverseproxy using the `squd-auth-helper` charm relation.
 It allows you to manage user credentials through charm actions (create-user, remove-user, list-users), and configure authentication
-parameters using charm configuration
+parameters using charm configuration.
+
+While the Squid Reverseproxy charm targets a "reverse proxy setup".
+This subordinate charm is currently only tested for a "forward proxy" use case.
 
 ## Project and community
 
