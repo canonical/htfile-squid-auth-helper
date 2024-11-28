@@ -84,6 +84,7 @@ def configured_charm_fixture(
 
 
 @pytest.mark.usefixtures("tools_directory")
+@pytest.mark.usefixtures("insecure_vault")
 def test_no_relation(vault_file: Path) -> None:
     """
     arrange: A temporary path for the vault file.
@@ -102,6 +103,7 @@ def test_no_relation(vault_file: Path) -> None:
 
 
 @pytest.mark.usefixtures("tools_directory")
+@pytest.mark.usefixtures("insecure_vault")
 def test_auth_helper_relation(digest_charm: Harness) -> None:
     """
     arrange: Start the charm with digest as authentication_type.
@@ -130,6 +132,7 @@ def test_auth_helper_relation(digest_charm: Harness) -> None:
 
 
 @pytest.mark.usefixtures("tools_directory")
+@pytest.mark.usefixtures("insecure_vault")
 def test_auth_helper_relation_basic_auth(basic_charm: Harness) -> None:
     """
     arrange: Start the charm with basic as authentication_type.
@@ -161,6 +164,7 @@ def test_auth_helper_relation_basic_auth(basic_charm: Harness) -> None:
 
 
 @pytest.mark.usefixtures("tools_directory")
+@pytest.mark.usefixtures("insecure_vault")
 def test_auth_helper_no_more_relation(digest_charm: Harness) -> None:
     """
     arrange: Start the charm with digest as authentication_type and a user created.
@@ -187,6 +191,7 @@ def test_auth_helper_no_more_relation(digest_charm: Harness) -> None:
 
 
 @pytest.mark.usefixtures("tools_directory")
+@pytest.mark.usefixtures("insecure_vault")
 def test_auth_helper_more_than_one_relation(digest_charm: Harness) -> None:
     """
     arrange: Start the charm with digest as authentication_type, a user created
@@ -218,6 +223,7 @@ def test_auth_helper_more_than_one_relation(digest_charm: Harness) -> None:
 
 
 @pytest.mark.usefixtures("tools_directory")
+@pytest.mark.usefixtures("insecure_vault")
 def test_auth_helper_authentication_type_changed(digest_charm: Harness) -> None:
     """
     arrange: Start the charm with digest as authentication_type and a user created.
@@ -253,6 +259,7 @@ def test_auth_helper_no_squid_folder() -> None:
 
 
 @pytest.mark.usefixtures("tools_directory")
+@pytest.mark.usefixtures("insecure_vault")
 @pytest.mark.parametrize(
     "configured_charm, vault",
     [
@@ -289,6 +296,7 @@ def test_create_user_action(configured_charm: Harness, vault: HtdigestFile | Htp
 
 
 @pytest.mark.usefixtures("tools_directory")
+@pytest.mark.usefixtures("insecure_vault")
 @pytest.mark.parametrize(
     "configured_charm, vault",
     [
@@ -323,6 +331,7 @@ def test_remove_user_action(configured_charm: Harness, vault: HtdigestFile | Htp
 
 
 @pytest.mark.usefixtures("tools_directory")
+@pytest.mark.usefixtures("insecure_vault")
 @pytest.mark.parametrize(
     "configured_charm, vault",
     [
@@ -359,6 +368,7 @@ def test_list_users(configured_charm: Harness, vault: HtdigestFile | HtpasswdFil
 
 
 @pytest.mark.usefixtures("tools_directory")
+@pytest.mark.usefixtures("insecure_vault")
 @pytest.mark.parametrize(
     "configured_charm, vault",
     [
@@ -389,6 +399,7 @@ def test_create_user_already_exists(
 
 
 @pytest.mark.usefixtures("tools_directory")
+@pytest.mark.usefixtures("insecure_vault")
 def test_create_user_set_password_fails(
     digest_charm: Harness, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -413,6 +424,7 @@ def test_create_user_set_password_fails(
 
 
 @pytest.mark.usefixtures("tools_directory")
+@pytest.mark.usefixtures("insecure_vault")
 def test_create_user_no_relation(vault_file: Path) -> None:
     """
     arrange: Start the charm with digest authentication_type but no relations.
@@ -436,6 +448,7 @@ def test_create_user_no_relation(vault_file: Path) -> None:
 
 
 @pytest.mark.usefixtures("tools_directory")
+@pytest.mark.usefixtures("insecure_vault")
 def test_create_user_no_vault_file(digest_charm: Harness) -> None:
     """
     arrange: Start the charm with digest authentication_type and the vault file missing.
@@ -455,6 +468,7 @@ def test_create_user_no_vault_file(digest_charm: Harness) -> None:
 
 
 @pytest.mark.usefixtures("tools_directory")
+@pytest.mark.usefixtures("insecure_vault")
 @pytest.mark.parametrize(
     "configured_charm",
     [
@@ -479,6 +493,7 @@ def test_remove_user_doesnt_exists(configured_charm: Harness) -> None:
 
 
 @pytest.mark.usefixtures("tools_directory")
+@pytest.mark.usefixtures("insecure_vault")
 def test_remove_user_no_relation(vault_file: Path) -> None:
     """
     arrange: Start the charm with digest authentication_type but no relations.
@@ -502,6 +517,7 @@ def test_remove_user_no_relation(vault_file: Path) -> None:
 
 
 @pytest.mark.usefixtures("tools_directory")
+@pytest.mark.usefixtures("insecure_vault")
 def test_remove_user_no_vault_file(digest_charm: Harness) -> None:
     """
     arrange: Start the charm with digest authentication_type and the vault file missing.
@@ -521,6 +537,7 @@ def test_remove_user_no_vault_file(digest_charm: Harness) -> None:
 
 
 @pytest.mark.usefixtures("tools_directory")
+@pytest.mark.usefixtures("insecure_vault")
 def test_list_users_no_relation(vault_file: Path) -> None:
     """
     arrange: Start the charm with digest authentication_type but no relations.
@@ -543,6 +560,7 @@ def test_list_users_no_relation(vault_file: Path) -> None:
 
 
 @pytest.mark.usefixtures("tools_directory")
+@pytest.mark.usefixtures("insecure_vault")
 def test_list_users_no_vault_file(digest_charm: Harness) -> None:
     """
     arrange: Start the charm with digest authentication_type and the vault file missing.
@@ -561,6 +579,7 @@ def test_list_users_no_vault_file(digest_charm: Harness) -> None:
 
 
 @pytest.mark.usefixtures("tools_directory")
+@pytest.mark.usefixtures("insecure_vault")
 def test_charm_state_get_digest(digest_charm: Harness) -> None:
     """
     arrange: A charmstate with default authentication_type (digest).
@@ -573,6 +592,7 @@ def test_charm_state_get_digest(digest_charm: Harness) -> None:
 
 
 @pytest.mark.usefixtures("tools_directory")
+@pytest.mark.usefixtures("insecure_vault")
 def test_charm_state_get_basic(basic_charm: Harness) -> None:
     """
     arrange: A charmstate with basic as authentication_type.
@@ -585,6 +605,7 @@ def test_charm_state_get_basic(basic_charm: Harness) -> None:
 
 
 @pytest.mark.usefixtures("tools_directory")
+@pytest.mark.usefixtures("insecure_vault")
 def test_charm_state_get_vault_no_file(digest_charm: Harness) -> None:
     """
     arrange: A charmstate with default authentication_type (digest) but missing vault file.

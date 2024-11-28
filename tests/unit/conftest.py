@@ -5,13 +5,14 @@
 
 # pylint: disable=too-few-public-methods, protected-access
 
-
+import os
 import typing
 from pathlib import Path
 
 import pytest
 from unit.constants import VAULT_FILENAME, VAULT_FILEPATH
 
+import charm
 import charm_state
 
 
@@ -24,6 +25,14 @@ def tools_directory_fixture(
     squid_tools_path.mkdir(parents=True, exist_ok=True)
 
     monkeypatch.setattr(charm_state, "SQUID_TOOLS_PATH", squid_tools_path)
+
+    yield
+
+
+@pytest.fixture(name="insecure_vault")
+def insecure_vault_fixture(monkeypatch: pytest.MonkeyPatch) -> typing.Generator[None, None, None]:
+    """Fixture used to use a temp directory for squid tools folder."""
+    monkeypatch.setattr(charm, "SQUID_USER", os.getuid())
 
     yield
 
