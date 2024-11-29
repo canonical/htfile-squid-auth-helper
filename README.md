@@ -13,7 +13,7 @@ digest or basic authentication using squid-auth-helper relation.
 As a subordinate charm this charm requires the [Squid Reverseproxy charm](https://charmhub.io/squid-reverseproxy)
 to be deployed and integrated with it.
 
-The charm brings digest or basic authentication support to the Squid Reverseproxy using the `squd-auth-helper` charm relation.
+The charm brings digest or basic authentication support to the Squid Reverseproxy using the `squid-auth-helper` charm relation.
 It allows you to manage user credentials through charm actions (create-user, remove-user, list-users), and configure authentication
 parameters using charm configuration.
 
