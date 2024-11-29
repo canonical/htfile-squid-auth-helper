@@ -12,7 +12,7 @@ jobs:
     secrets: inherit
     with:
       juju-channel: ${{ matrix.juju-version }}
-      tmate-debug: true
+      tmate-debug: false
       load-test-enabled: false
       trivy-fs-enabled: true
       trivy-image-config: "trivy.yaml"
