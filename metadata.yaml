@@ -33,6 +33,10 @@ description: |
   It allows you to manage user credentials through charm actions (create-user, remove-user, list-users), and configure authentication
   parameters using charm configuration
 
+  While the Squid Reverseproxy charm targets a "reverse proxy setup".
+  This subordinate charm is currently only tested for a "forward proxy" use case.
+
+
 subordinate: true
 series:
   - jammy
