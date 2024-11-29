@@ -80,7 +80,7 @@ class HtfileSquidAuthHelperCharm(ops.CharmBase):
         """Handle the relation broken event for squid-auth-helper relation of the charm."""
         charm_state = CharmState.from_charm(self)
         status = self._compute_charm_status()
-        if not self._is_related_to_squid():
+        if not self.model.relations[AUTH_HELPER_RELATION_NAME]:
             vault_filepath = charm_state.squid_auth_config.vault_filepath
             vault_filepath.unlink()
             self._create_auth_vault(charm_state)
@@ -221,19 +221,12 @@ class HtfileSquidAuthHelperCharm(ops.CharmBase):
             }
         )
 
-    def _is_related_to_squid(self) -> bool:
-        """Check if the Squid proxy auth-helper relation is set.
-
-        Returns: True if the charm is related to Squid Proxy, false otherwise
-        """
-        return bool(self.model.relations[AUTH_HELPER_RELATION_NAME])
-
     def _compute_charm_status(self) -> ops.StatusBase:
         """Set the charm to BlockedStatus if no squid-auth-helper relation exists.
 
         Returns: A blocked status if no relation exists, an active status otherwise.
         """
-        if not self._is_related_to_squid():
+        if not self.model.relations[AUTH_HELPER_RELATION_NAME]:
             return ops.BlockedStatus(STATUS_BLOCKED_RELATION_MISSING_MESSAGE)
         return ops.ActiveStatus()
 
