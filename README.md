@@ -1,5 +1,5 @@
 [![CharmHub Badge](TODO)](TODO)
-[![Promote charm](https://github.com/canonical/htfile-squid-auth-helper/actions/workflows/promote_charm.yaml/badge.svg)](https://github.com/canonical/htfile-squid-auth-helper/actions/workflows/promote_charm.yaml)
+[![Promote charm](https://github.com/canonical/digest-squid-auth-helper/actions/workflows/promote_charm.yaml/badge.svg)](https://github.com/canonical/digest-squid-auth-helper/actions/workflows/promote_charm.yaml)
 [![Discourse Status](https://img.shields.io/discourse/status?server=https%3A%2F%2Fdiscourse.charmhub.io&style=flat&label=CharmHub%20Discourse)](https://discourse.charmhub.io)
 
 # Squid Proxy Htfile auth helper

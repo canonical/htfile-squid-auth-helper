@@ -5,7 +5,7 @@
 
 # The charm package name, no spaces (required)
 # See https://juju.is/docs/sdk/naming#heading--naming-charms for guidance.
-name: htfile-squid-auth-helper
+name: digest-squid-auth-helper
  
 # The following metadata are human-readable and will be published prominently on Charmhub.
 
@@ -16,10 +16,10 @@ display-name: Squid Proxy auth helper that supports basic and digest auth
 summary: |
   Htfile Auth for Squid Proxy
 docs: https://TODO
-issues: https://github.com/canonical/htfile-squid-auth-helper/issues
+issues: https://github.com/canonical/digest-squid-auth-helper/issues
 maintainers: 
   - https://launchpad.net/~canonical-is-devops
-source: https://github.com/canonical/htfile-squid-auth-helper
+source: https://github.com/canonical/digest-squid-auth-helper
 
 description: |
   A [Juju](https://juju.is/) subordinate [charm](https://juju.is/docs/olm/charmed-operators) for
