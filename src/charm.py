@@ -295,4 +295,4 @@ class HtfileSquidAuthHelperCharm(ops.CharmBase):
 
 
 if __name__ == "__main__":  # pragma: nocover
-    ops.main.main(HtfileSquidAuthHelperCharm)
+    ops.main(HtfileSquidAuthHelperCharm)
