@@ -17,7 +17,7 @@ remove-user:
   properties:
     username:
       description: |
-        User name to be remove.
+        User name to be removed.
       type: string
   required:
     - username
