@@ -19,7 +19,7 @@ from tests.unit.constants import VAULT_FILENAME, VAULT_FILEPATH
 
 logger = logging.getLogger(__name__)
 
-METADATA = yaml.safe_load(Path("./metadata.yaml").read_text(encoding="utf-8"))
+METADATA = yaml.safe_load(Path("./charmcraft.yaml").read_text(encoding="utf-8"))
 APP_NAME = METADATA["name"]
 CLIENT_NAME = "client"
 
