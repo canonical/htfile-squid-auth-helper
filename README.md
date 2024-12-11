@@ -1,5 +1,5 @@
-[![CharmHub Badge](https://charmhub.io/digest-squid-auth-helper/badge.svg)](https://charmhub.io/digest-squid-auth-helper)
-[![Promote charm](https://github.com/canonical/digest-squid-auth-helper/actions/workflows/promote_charm.yaml/badge.svg)](https://github.com/canonical/digest-squid-auth-helper/actions/workflows/promote_charm.yaml)
+[![CharmHub Badge](https://charmhub.io/squid-auth-local/badge.svg)](https://charmhub.io/squid-auth-local)
+[![Promote charm](https://github.com/canonical/squid-auth-local/actions/workflows/promote_charm.yaml/badge.svg)](https://github.com/canonical/squid-auth-local/actions/workflows/promote_charm.yaml)
 
 # Squid Proxy Htfile auth helper
 
@@ -33,29 +33,29 @@ As this charm is a subordinate charm, you should have a [Squid Reverseproxy char
 
 ### Deploy
 
-Once your Squid instance is running, deploy the auth helper charm with `juju deploy digest-squid-auth-helper` and integrate it with your reverse proxy with `juju integrate squid-reverseproxy digest-squid-auth-helper`.
+Once your Squid instance is running, deploy the auth helper charm with `juju deploy squid-auth-local` and integrate it with your reverse proxy with `juju integrate squid-reverseproxy squid-auth-local`.
 
 ### Basic operations
 
 #### Configure the authentication type
 
-The default configuration can be seen using the `juju config digest-squid-auth-helper` command.
+The default configuration can be seen using the `juju config squid-auth-local` command.
 
-The default authentication type is "digest". If you want to switch to Basic authentication, you can issue the `juju config digest-squid-auth-helper authentication-type=basic` command.
+The default authentication type is "digest". If you want to switch to Basic authentication, you can issue the `juju config squid-auth-local authentication-type=basic` command.
 
 Warning: changing the authentication type will reset all existing users.
 
 #### Giving access to users
 
-New users can be given access through the `juju run digest-squid-auth-helper/0 create-user username=yourusername`. The command will return you the username, realm and password.
+New users can be given access through the `juju run squid-auth-local/0 create-user username=yourusername`. The command will return you the username, realm and password.
 
 #### Listing current users
 
-The `juju run digest-squid-auth-helper/0 list-users` will return the list of active users.
+The `juju run squid-auth-local/0 list-users` will return the list of active users.
 
 #### Removing users
 
-You can remove users with `juju run digest-squid-auth-helper/0 remove-user username=yourusername`
+You can remove users with `juju run squid-auth-local/0 remove-user username=yourusername`
 
 Note: Squid caches some authentication lookups (see [documentation](https://wiki.squid-cache.org/Features/Authentication#does-squid-cache-authentication-lookups)).
 
@@ -64,6 +64,6 @@ Note: Squid caches some authentication lookups (see [documentation](https://wiki
 The squid-auth-local subordinate charm is a member of the Ubuntu family. It's an
 open source project that warmly welcomes community projects, contributions,
 suggestions, fixes and constructive feedback.
-* [Issues](https://github.com/canonical/digest-squid-auth-helper/issues)
+* [Issues](https://github.com/canonical/squid-auth-local/issues)
 * [Get support](https://discourse.charmhub.io/)
 * [Contribute](https://charmhub.io/squid-auth-local/docs/contributing)
