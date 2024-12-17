@@ -30,11 +30,9 @@ def tools_directory_fixture(
 
 
 @pytest.fixture(name="insecure_vault")
-def insecure_vault_fixture(monkeypatch: pytest.MonkeyPatch) -> typing.Generator[None, None, None]:
+def insecure_vault_fixture(monkeypatch: pytest.MonkeyPatch) -> None:
     """Fixture used to use a temp directory for squid tools folder."""
     monkeypatch.setattr(charm, "SQUID_USER", os.getuid())
-
-    yield
 
 
 @pytest.fixture(name="vault_file")
