@@ -114,7 +114,7 @@ class HtfileSquidAuthHelperCharm(ops.CharmBase):
             self._get_auth_vault(charm_state)
         except ValueError:
             vault_filepath = charm_state.squid_auth_config.vault_filepath
-            vault_filepath.unlink()
+            vault_filepath.unlink(missing_ok=True)
             self._create_auth_vault(charm_state)
 
         for relation in relations:
