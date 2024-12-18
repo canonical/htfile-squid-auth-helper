@@ -12,7 +12,7 @@ summary: |
 links:
   contact: https://launchpad.net/~canonical-is-devops
   issues: https://github.com/canonical/digest-squid-auth-helper/issues
-  documentation: https://TODO
+  documentation: https://discourse.charmhub.io/t/squid-auth-local-documentation-overview/
   source: https://github.com/canonical/digest-squid-auth-helper
 
 description: |
