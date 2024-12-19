@@ -84,7 +84,7 @@ class CharmState:
         """
         mapped_config = {
             field: charm.config[field.replace("_", "-")]
-            for field in SquidAuthConfig.model_fields
+            for field in SquidAuthConfig.model_fields.keys()
             if field.replace("_", "-") in charm.config
         }
 
