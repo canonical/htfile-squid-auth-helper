@@ -1,0 +1,138 @@
+# Copyright 2024 Canonical Ltd.
+# See LICENSE file for licensing details.
+# This file populates the Overview on Charmhub.
+# See https://juju.is/docs/sdk/metadata-reference for a checklist and guidance.
+
+name: digest-squid-auth-helper
+title: Squid auth helper for local auth
+
+summary: |
+  Htfile Auth for Squid Proxy
+
+links:
+  contact: https://launchpad.net/~canonical-is-devops
+  issues: https://github.com/canonical/digest-squid-auth-helper/issues
+  documentation: https://discourse.charmhub.io/t/digest-squid-auth-helper-documentation-overview/16141
+  source: https://github.com/canonical/digest-squid-auth-helper
+
+description: |
+  A [Juju](https://juju.is/) subordinate [charm](https://juju.is/docs/olm/charmed-operators) for
+  the [Squid Reverseproxy charm](https://charmhub.io/squid-reverseproxy) that allows
+  authentication digest or basic authentication using squid-auth-helper relation.
+
+  As a subordinate charm this charm requires the [Squid Reverseproxy charm](https://charmhub.io/squid-reverseproxy)
+  to be deployed and integrated with it.
+
+  The charm brings digest or basic authentication support to the Squid Reverseproxy using the `squid-auth-helper` charm relation.
+  It allows you to manage user credentials through charm actions (create-user, remove-user, list-users), and configure authentication
+  parameters using charm configuration
+
+  While the Squid Reverseproxy charm targets a "reverse proxy setup".
+  This subordinate charm is currently only tested for a "forward proxy" use case.
+
+
+subordinate: true
+
+requires:
+  squid-auth-helper:
+    interface: squid-auth-helper
+    scope: container
+
+type: charm
+bases:
+  - build-on:
+    - name: ubuntu
+      channel: "22.04"
+    run-on:
+    - name: ubuntu
+      channel: "22.04"
+    - name: "ubuntu"
+      channel: "20.04"
+
+parts:
+  charm:
+    charm-binary-python-packages: [pydantic]
+    override-build: |-
+      rustup default stable
+      craftctl default
+    build-snaps:
+      - rustup
+
+config:
+  options:
+    children-max:
+      type: int
+      default: 20
+      description: |
+        Maximum amount of child process created to manage authentication.
+    children-startup:
+      type: int
+      default: 0
+      description: |
+        Initial amount of child process to manage authentication created at startup.
+        If 0, first one will be created on demand.
+    children-idle:
+      type: int
+      default: 1
+      description: |
+        Amount of idle child process to manage  authentication that must be available at any time.
+    vault-filepath:
+      type: string
+      default: "/etc/squid-auth/password-file"
+      description: |
+        Path where usernames and passwords will be stored.
+    nonce-garbage-interval:
+      type: int
+      default: 5
+      description: |
+        Specifies the interval in minutes that nonces that have been issued to client_agent's are checked for validity.
+        Required if authentication_type is "digest".
+    nonce-max-duration:
+      type: int
+      default: 30
+      description: |
+        Specifies the maximum length of time in minutes a given nonce will be valid for.
+        Required if authentication_type is "digest".
+    nonce-max-count:
+      type: int
+      default: 50
+      description: |
+        Specifies the maximum number of times a given nonce can be used.
+        Required if authentication_type is "digest".
+    realm:
+      type: string
+      default: "squid"
+      description: |
+        Name of the HTTP authentication realm.
+        Required if authentication_type is "digest".
+    authentication-type:
+      type: string
+      default: "digest"
+      description: |
+        Specifies which authentication type Squid will provide. Currently supports "basic" and "digest".
+        Only one authentication type is active at a time.
+
+actions:
+  create-user:
+    description: |
+      Create a user who will be usable on proxy ACLs.
+    properties:
+      username:
+        description: |
+          User name to be created.
+        type: string
+    required:
+      - username
+  remove-user:
+    description: |
+      Remove an existing user from the vault file.
+    properties:
+      username:
+        description: |
+          User name to be removed.
+        type: string
+    required:
+      - username
+  list-users:
+    description: |
+      List all users usable on proxy ACLs.
