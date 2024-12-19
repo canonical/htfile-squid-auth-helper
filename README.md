@@ -61,9 +61,9 @@ Note: Squid caches some authentication lookups (see [documentation](https://wiki
 
 ## Project and community
 
-The squid-auth-local subordinate charm is a member of the Ubuntu family. It's an
+The digest-squid-auth-helper subordinate charm is a member of the Ubuntu family. It's an
 open source project that warmly welcomes community projects, contributions,
 suggestions, fixes and constructive feedback.
 * [Issues](https://github.com/canonical/digest-squid-auth-helper/issues)
 * [Get support](https://discourse.charmhub.io/)
-* [Contribute](https://charmhub.io/squid-auth-local/docs/contributing)
+* [Contribute](https://charmhub.io/digest-squid-auth-helper/docs/contributing)
