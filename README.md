@@ -31,6 +31,8 @@ As this charm is a subordinate charm, you should have a [Squid Reverseproxy char
 - Deploy the reverseproxy charm: `juju deploy squid-reverseproxy`
 - Monitor the deployment with: `juju status --watch 2s`
 
+**Important**: for the authentification to be triggered, you need to set up ACL and disable vhost acceleration. You can do so with the following command: `juju config squid-reverseproxy auth_list='- "proxy_auth": [REQUIRED]' port_options=""`.
+
 ### Deploy
 
 Once your Squid instance is running, deploy the auth helper charm with `juju deploy digest-squid-auth-helper` and integrate it with your reverse proxy with `juju integrate squid-reverseproxy digest-squid-auth-helper`.
