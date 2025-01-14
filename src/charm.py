@@ -12,13 +12,13 @@ import shutil
 from typing import Any
 
 import ops
-from passlib import pwd
 from passlib.apache import HtdigestFile, HtpasswdFile
 from tabulate import tabulate
 
 from charm_state import AuthenticationTypeEnum, CharmState
 from charm_state_decorator import block_if_invalid_config
 from exceptions import SquidPathNotFoundError
+from password import generate_password
 
 AUTH_HELPER_RELATION_NAME = "squid-auth-helper"
 
@@ -146,7 +146,7 @@ class HtfileSquidAuthHelperCharm(ops.CharmBase):
             event.set_results({"message": f"User {username} already exists."})
             return
 
-        generated_password = pwd.genword()
+        generated_password = generate_password()
         if vault.set_password(username, generated_password):
             event.fail("An error occurred when saving the vault file.")
             return
