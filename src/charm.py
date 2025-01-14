@@ -32,6 +32,8 @@ VAULT_FILE_MISSING = "Vault file is missing, something probably went wrong durin
 
 SQUID_USER = "proxy"
 
+USER_PASSWORD_LENGTH = 12
+
 
 class HtfileSquidAuthHelperCharm(ops.CharmBase):
     """A subordinate charm enabling support for basic or digest auth on Squid Reverseproxy."""
@@ -146,7 +148,7 @@ class HtfileSquidAuthHelperCharm(ops.CharmBase):
             event.set_results({"message": f"User {username} already exists."})
             return
 
-        generated_password = generate_password()
+        generated_password = generate_password(USER_PASSWORD_LENGTH)
         if vault.set_password(username, generated_password):
             event.fail("An error occurred when saving the vault file.")
             return

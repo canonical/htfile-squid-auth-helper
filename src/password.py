@@ -7,15 +7,24 @@ import secrets
 import string
 
 
-def generate_password() -> str:
+def generate_password(length: int = 12) -> str:
     """Generate a password with the given policy.
+
+    Args:
+        length: The length of the password to be generated. Defaults to 12.
 
     Return:
         The generated password.
+
+    Raises:
+        ValueError: If the password length is too short.
     """
-    characters = string.ascii_letters + string.digits
+    if length < 8:
+        raise ValueError("Password length is too short.")
+
+    characters = string.ascii_letters + string.digits + string.punctuation
     while True:
-        password = "".join(secrets.choice(characters) for i in range(10))
+        password = "".join(secrets.choice(characters) for i in range(length))
         # At least 1 upper letter, 1 lower letter and 1 digit
         if (
             sum(c.islower() for c in password) >= 1
