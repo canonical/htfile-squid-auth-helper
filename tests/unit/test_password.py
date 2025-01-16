@@ -8,12 +8,12 @@ from charm import USER_PASSWORD_LENGTH
 from password import generate_password
 
 
-def test_password_default():
+def test_password_ok():
     """
-    act: Call the function with default parameters.
+    act: Call the function with good parameters.
     assert: A value is returned.
     """
-    assert generate_password()
+    assert generate_password(12)
 
 
 def test_password_policy():
@@ -21,7 +21,7 @@ def test_password_policy():
     act: Call the function with default parameters.
     assert: The generated password matches a mixed characters policy.
     """
-    password = generate_password()
+    password = generate_password(12)
     contains_digit = False
     contains_upper = False
     contains_lower = False

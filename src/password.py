@@ -7,7 +7,7 @@ import secrets
 import string
 
 
-def generate_password(length: int = 12) -> str:
+def generate_password(length) -> str:
     """Generate a password with the given policy.
 
     Args:
