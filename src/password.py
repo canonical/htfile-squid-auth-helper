@@ -22,7 +22,7 @@ def generate_password(length) -> str:
     if length < 8:
         raise ValueError("Password length is too short.")
 
-    hard_to_escape = set("'" + '"')
+    hard_to_escape = {"'", '"'}
     characters = "".join(
         set(string.ascii_letters + string.digits + string.punctuation) - set(hard_to_escape)
     )
