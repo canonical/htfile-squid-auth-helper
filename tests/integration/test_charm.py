@@ -61,7 +61,7 @@ async def check_access(
         auth_options = "--proxy-digest"
 
     if credentials:
-        auth_options += f" --proxy-user {credentials}"
+        auth_options += f" --proxy-user '{credentials}'"
 
     command = "curl -o /dev/null -s -w '%{http_code}' "  # Only returns status code
     command += "--no-location --connect-timeout 2 --max-time 2 "  # Don't follow redirects
