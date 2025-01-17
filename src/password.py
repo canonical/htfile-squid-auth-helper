@@ -22,7 +22,10 @@ def generate_password(length) -> str:
     if length < 8:
         raise ValueError("Password length is too short.")
 
-    characters = string.ascii_letters + string.digits + string.punctuation
+    hard_to_escape = set("'" + '"')
+    characters = "".join(
+        set(string.ascii_letters + string.digits + string.punctuation) - set(hard_to_escape)
+    )
     while True:
         password = "".join(secrets.choice(characters) for i in range(length))
         # At least 1 upper letter, 1 lower letter and 1 digit
