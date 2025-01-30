@@ -5,6 +5,8 @@ on:
   push:
     branches:
       - 5/main
+    paths-ignore:
+      - 'docs/**'
 
 jobs:
   publish-to-edge:
