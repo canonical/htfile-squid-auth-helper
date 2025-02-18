@@ -1,4 +1,4 @@
-ops==2.18.0
+ops==2.18.1
 pydantic==2.10.6
 pydantic_core==2.29.0
 libpass==1.9.0
